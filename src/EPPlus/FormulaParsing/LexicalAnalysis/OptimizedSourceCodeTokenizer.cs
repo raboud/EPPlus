@@ -100,7 +100,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     ix++;
                 }
 
-                if (c == '\"')
+                if(c == '\"')
                 {
                     if (pc == c && isInString)
                     {
@@ -138,7 +138,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             {
                                 flags |= statFlags.isAddress;
                             }
-                            if (c >= '0' && c <= '9')
+                            else if (c >= '0' && c <= '9')
                             {
                                 flags |= statFlags.isNumeric;
                             }
@@ -200,25 +200,32 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
             else if ((flags & statFlags.isAddress) == statFlags.isAddress)
             {
-                if (currentString.Equals("#REF!", StringComparison.OrdinalIgnoreCase))
+                if (currentString.EndsWith("#REF!", StringComparison.OrdinalIgnoreCase))
                 {
                     l.Add(new Token(currentString, TokenType.InvalidReference));
                 }
-                else if (currentString.Equals("#NUM!", StringComparison.OrdinalIgnoreCase))
+                else if (currentString.EndsWith("#NUM!", StringComparison.OrdinalIgnoreCase))
                 {
                     l.Add(new Token(currentString, TokenType.NumericError));
                 }
-                else if (currentString.Equals("#VALUE!", StringComparison.OrdinalIgnoreCase))
+                else if (currentString.EndsWith("#VALUE!", StringComparison.OrdinalIgnoreCase))
                 {
                     l.Add(new Token(currentString, TokenType.ValueDataTypeError));
                 }
-                else if (currentString.Equals("#NULL!", StringComparison.OrdinalIgnoreCase))
+                else if (currentString.EndsWith("#NULL!", StringComparison.OrdinalIgnoreCase))
                 {
                     l.Add(new Token(currentString, TokenType.Null));
                 }
                 else
                 {
-                    l.Add(new Token(currentString, TokenType.ExcelAddress));
+                    if(IsName(currentString))
+                    {
+                        l.Add(new Token(currentString, TokenType.NameValue));
+                    }
+                    else
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddress));
+                    }
                 }
             }
             else if ((flags & statFlags.isNonNumeric) == statFlags.isNonNumeric)
@@ -266,7 +273,19 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 #endif
             
         }
-        private bool IsValidCellAddress(string address)
+    private static readonly char[] _addressChars = new char[]{':','$'};
+    private static bool IsName(string s)
+    {
+        var ix = s.LastIndexOf('!');
+        if(ix>=0)
+        {
+            s = s.Substring(ix + 1);
+        }
+        if (s.IndexOfAny(_addressChars) >=0) return false;
+        return IsValidCellAddress(s)==false;
+    }
+
+        private static bool IsValidCellAddress(string address)
         {
             var numPos = -1;
             for (var i=0; i < address.Length; i++)
