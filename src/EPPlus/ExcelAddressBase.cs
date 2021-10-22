@@ -256,6 +256,8 @@ namespace OfficeOpenXml
                 }
             }
         }
+
+
         internal string ChangeTableName(string prevName, string name)
         {
             if (LocalAddress.StartsWith(prevName +"[", StringComparison.CurrentCultureIgnoreCase))

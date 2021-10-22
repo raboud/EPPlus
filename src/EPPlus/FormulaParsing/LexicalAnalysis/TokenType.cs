@@ -21,7 +21,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
     /// Token types in the context of formula parsing.
     /// </summary>
     [Flags]
-    public enum TokenType : uint
+    public enum TokenType : ulong
     {
         /// <summary>
         /// The parsed token represents an operator
@@ -146,6 +146,10 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         /// <summary>
         /// The parsed token represents an address with the OFFSET function, either before, after or on both sides of the colon.
         /// </summary>
-        RangeOffset = 1 << 30
+        RangeOffset = 1 << 30,
+        /// <summary>
+        /// White space or Intersect operator
+        /// </summary>
+        WhiteSpace = (ulong)1 << 31
     }
 }

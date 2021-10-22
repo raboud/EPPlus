@@ -50,6 +50,8 @@ using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using OfficeOpenXml.Drawing.Chart;
 using OfficeOpenXml.ConditionalFormatting.Contracts;
 using Newtonsoft.Json;
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing;
 
 namespace EPPlusTest
 {

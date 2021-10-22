@@ -386,6 +386,16 @@ namespace OfficeOpenXml
         const int numberOfCharacters = ('Z' - 'A') + 1;
         const int startChar = 'A'-1;
         const int startNum = '0';
+        internal static int GetColumnNumber(string columnAddress)
+        {
+            var c = 0;
+            columnAddress = columnAddress.ToUpper();
+            for (int i = columnAddress.Length - 1; i >= 0; i--)
+            {
+                c += (columnAddress[i] - startChar) * numberOfCharacters;
+            }
+            return c;
+        }
         internal static bool GetRowCol(string address, out int row, out int col, bool throwException, out bool fixedRow, out bool fixedCol)
         {
             int start = 0;
