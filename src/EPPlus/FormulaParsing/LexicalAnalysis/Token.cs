@@ -50,7 +50,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         /// </summary>
         public string Value { get; internal set; }
 
-        private TokenType _tokenType;
+        internal TokenType _tokenType;
 
         /// <summary>
         /// Indicates whether a numeric value should be negated when compiled

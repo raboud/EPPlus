@@ -72,7 +72,7 @@ namespace OfficeOpenXml.ConditionalFormatting
                 namespaceManager,
                 itemElementNode)
         {
-            Require.Argument(priority).IsInRange(1, int.MaxValue, "priority");
+            //Require.Argument(priority).IsInRange(1, int.MaxValue, "priority");
             Require.Argument(address).IsNotNull("address");
             Require.Argument(worksheet).IsNotNull("worksheet");
 

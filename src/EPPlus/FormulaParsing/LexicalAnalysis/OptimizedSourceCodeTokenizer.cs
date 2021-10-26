@@ -79,30 +79,35 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
            isNumeric = 0x10,
            isDecimal = 0x20,
            isPercent = 0x40,
-           isNegator = 0x80
+           isNegator = 0x80,
+           isColon =   0x100
         }
         public IEnumerable<Token> Tokenize(string input, string worksheet)
         {
             var l = new List<Token>();
-            int ix = 0;
+            int ix;
+            var length = input.Length;
+            
+            if (length > 0 && (input[0] == '+' /*|| input[0] == '='*/))
+            {
+                ix=1;
+            }
+            else
+            {
+                ix = 0;
+            }
 
             statFlags flags = 0;
-            var isInString = false;
+            short isInString = 0;
             var current =new StringBuilder();
-            var length = input.Length;
             var pc = '\0';
             var separatorTokens = TokenSeparatorProvider.Instance.Tokens;
             while (ix < length)
             {
                 var c = input[ix];
-                if (ix==0 && (c=='+' || c=='='))
+                if(c == '\"' && isInString != 2)
                 {
-                    ix++;
-                }
-
-                if(c == '\"')
-                {
-                    if (pc == c && isInString)
+                    if (pc == c && isInString == 0)
                     {
                         current.Append(c);
                     }
@@ -110,52 +115,99 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     {
                         flags |= statFlags.isString;
                     }
-                    isInString = !isInString;
+                    isInString ^= 1;
+                }
+                else if (c == '\'' && isInString !=1)
+                {
+                    current.Append(c);
+                    flags |= statFlags.isAddress;
+                    isInString ^= 2;
                 }
                 else
                 { 
-                    if(isInString==false && _charTokens.ContainsKey(c))
+                    if(isInString==0 && _charTokens.ContainsKey(c))
                     {
-                        HandleToken(l, c, current, ref flags);
-                        if(c=='-')
+                        if (c == ' ') //white space, we ignore for now. Implement intersect operation handling here.
                         {
-                            flags |= statFlags.isNegator;
-                        }
-                        else if (ix+1 < length && _stringTokens.ContainsKey(input.Substring(ix,2)))
-                        {
-                            l.Add(_stringTokens[input.Substring(ix, 2)]);
+
                         }
                         else
                         {
-                            l.Add(_charTokens[c]);
+                            HandleToken(l, c, current, ref flags);
+                            if (c == '-')
+                            {
+                                flags |= statFlags.isNegator;
+                            }
+                            else if(c=='+' && l.Count>0) //remove leading + and add + operator.
+                            {
+                                var pt = l[l.Count - 1];
+
+                                //Remove prefixing +
+                                if (!(pt.TokenTypeIsSet(TokenType.Operator)
+                                    ||
+                                    pt.TokenTypeIsSet(TokenType.Negator)
+                                    ||
+                                    pt.TokenTypeIsSet(TokenType.OpeningParenthesis)
+                                    ||
+                                    pt.TokenTypeIsSet(TokenType.Comma)
+                                    ||
+                                    pt.TokenTypeIsSet(TokenType.SemiColon)
+                                    ||
+                                    pt.TokenTypeIsSet(TokenType.OpeningEnumerable)))
+                                {
+                                    l.Add(_charTokens[c]);
+                                }
+                            }
+                            else if (ix + 1 < length && _stringTokens.ContainsKey(input.Substring(ix, 2)))
+                            {
+                                l.Add(_stringTokens[input.Substring(ix, 2)]);
+                                ix++;
+                            }
+                            else
+                            {
+                                l.Add(_charTokens[c]);
+                            }
                         }
                     }
                     else
                     {
-                        if(!isInString)
+                        if(isInString==0)
                         {
-                            if (_charAddressTokens.ContainsKey(c))
+                            if (current.Length == 0 && c == ':' && pc == ')')
                             {
-                                flags |= statFlags.isAddress;
-                            }
-                            else if (c >= '0' && c <= '9')
-                            {
-                                flags |= statFlags.isNumeric;
-                            }
-                            else if (c == '.')
-                            {
-                                flags |= statFlags.isDecimal;
-                            }
-                            else if (c == '%')
-                            {
-                                flags |= statFlags.isPercent;
+                                l.Add(new Token(":", TokenType.Colon));
+                                SetRangeOffsetToken(l);
+                                flags |= statFlags.isColon;
                             }
                             else
                             {
-                                flags |= statFlags.isNonNumeric;
+                                if (_charAddressTokens.ContainsKey(c)) //handel :
+                                {
+                                    flags |= statFlags.isAddress;
+                                }
+                                else if (c >= '0' && c <= '9')
+                                {
+                                    flags |= statFlags.isNumeric;
+                                }
+                                else if (c == '.')
+                                {
+                                    flags |= statFlags.isDecimal;
+                                }
+                                else if (c == '%')
+                                {
+                                    flags |= statFlags.isPercent;
+                                }
+                                else
+                                {
+                                    flags |= statFlags.isNonNumeric;
+                                }
+                                current.Append(c);
                             }
                         }
-                        current.Append(c);
+                        else
+                        {
+                            current.Append(c);
+                        }
                     }
                 }
                 ix++;
@@ -164,12 +216,44 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             HandleToken(l, pc, current, ref flags);
             return l;
         }
+
+        private void SetRangeOffsetToken(List<Token> l)
+        {
+            int i = l.Count - 1;
+            int p= 0;
+            while (i >= 0)
+            {
+                if (l[i].TokenTypeIsSet(TokenType.OpeningParenthesis))
+                {
+                    p--;
+                }
+                else if(l[i].TokenTypeIsSet(TokenType.ClosingParenthesis))
+                {
+                    p++;
+                }
+                else if (l[i].TokenTypeIsSet(TokenType.Function) && l[i].Value.Equals("offset", StringComparison.OrdinalIgnoreCase) && p==0)
+                {
+                    l[i] = new Token(l[i].Value, TokenType.RangeOffset | TokenType.Function);
+                }
+                ix--;
+            }
+        }
+
         private void HandleToken(List<Token> l,char c, StringBuilder current, ref statFlags flags)
         {
             if ((flags & statFlags.isNegator) == statFlags.isNegator)
             {
-                var pt = l[l.Count - 1];
-                if (pt.TokenTypeIsSet(TokenType.Operator) ||
+                if (l.Count == 0)
+                {
+                    l.Add(new Token("-", TokenType.Negator));
+                }
+                else
+                {
+                    var pt = l[l.Count - 1];
+                    if (pt.TokenTypeIsSet(TokenType.Operator)
+                        ||
+                        pt.TokenTypeIsSet(TokenType.Negator)
+                        ||
                         pt.TokenTypeIsSet(TokenType.OpeningParenthesis)
                         ||
                         pt.TokenTypeIsSet(TokenType.Comma)
@@ -177,16 +261,22 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                         pt.TokenTypeIsSet(TokenType.SemiColon)
                         ||
                         pt.TokenTypeIsSet(TokenType.OpeningEnumerable))
-                {
-                    l.Add(new Token("-", TokenType.Negator));
-                }
-                else
-                {
-                    l.Add(_charTokens['-']);
+                    {
+                        l.Add(new Token("-", TokenType.Negator));
+                    }
+                    else
+                    {
+                        l.Add(_charTokens['-']);
+                    }
                 }
             }
             if (current.Length == 0)
             {
+                if((flags & statFlags.isString) == statFlags.isString)
+                {
+                    l.Add(new Token("", TokenType.StringContent));
+                }
+                flags = 0;
                 return;
             }
             var currentString = current.ToString();
@@ -196,8 +286,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
             else if (c == '(')
             {
-                l.Add(new Token(currentString, TokenType.Function));
-            }
+                if((flags & statFlags.isColon) == statFlags.isColon)
+                {
+                    l.Add(new Token(currentString, TokenType.Function | TokenType.RangeOffset));
+                }
+                else
+                {
+                    l.Add(new Token(currentString, TokenType.Function));
+                }
+            }            
             else if ((flags & statFlags.isAddress) == statFlags.isAddress)
             {
                 if (currentString.EndsWith("#REF!", StringComparison.OrdinalIgnoreCase))
@@ -237,7 +334,14 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
                 else if (IsValidCellAddress(currentString))
                 {
-                    l.Add(new Token(currentString, TokenType.ExcelAddress));
+                    if ((flags & statFlags.isColon) == statFlags.isColon)
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddress| TokenType.RangeOffset));
+                    }
+                    else
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddress));
+                    }
                 }
                 else
                 {
@@ -246,11 +350,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
             else
             {
-                //We can set the value as negative instead of an extra token for negator.
-                //if(EnumUtil.HasFlag(flags, statFlags.isNegator))
-                //{
-                //    currentString = "-" + currentString;
-                //}
                 if ((flags & statFlags.isPercent) == statFlags.isPercent)
                 {
                     l.Add(new Token(currentString, TokenType.Percent));
@@ -306,7 +405,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
             }
             if (numPos < 1 || numPos > 3) return false;
-            var col = ExcelAddressBase.GetColumnNumber(address.Substring(numPos));
+            var col = ExcelAddressBase.GetColumnNumber(address.Substring(0,numPos));
             if (col <= 0 || col > ExcelPackage.MaxColumns) return false;
             if(int.TryParse(address.Substring(numPos), out int row))
             {
