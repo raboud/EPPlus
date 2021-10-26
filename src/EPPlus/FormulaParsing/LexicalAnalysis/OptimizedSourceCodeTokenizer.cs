@@ -235,7 +235,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 {
                     l[i] = new Token(l[i].Value, TokenType.RangeOffset | TokenType.Function);
                 }
-                ix--;
+                i--;
             }
         }
 
