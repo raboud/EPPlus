@@ -98,7 +98,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
 
             statFlags flags = 0;
+
+
+
             short isInString = 0;
+            short bracketCount = 0;
             var current =new StringBuilder();
             var pc = '\0';
             var separatorTokens = TokenSeparatorProvider.Instance.Tokens;
@@ -123,9 +127,20 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     flags |= statFlags.isAddress;
                     isInString ^= 2;
                 }
+                else if(c=='[' && isInString == 0)
+                {
+                    current.Append(c);
+                    flags |= statFlags.isAddress;
+                    bracketCount++;
+                }
+                else if (c == ']' && isInString == 0)
+                {
+                    current.Append(c);
+                    bracketCount--;
+                }
                 else
                 { 
-                    if(isInString==0 && _charTokens.ContainsKey(c))
+                    if(isInString==0 && bracketCount == 0 && _charTokens.ContainsKey(c))
                     {
                         if (c == ' ') //white space, we ignore for now. Implement intersect operation handling here.
                         {
@@ -372,14 +387,14 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 #endif
             
         }
-    private static readonly char[] _addressChars = new char[]{':','$'};
+    private static readonly char[] _addressChars = new char[]{':','$', '[', ']'};
     private static bool IsName(string s)
     {
         var ix = s.LastIndexOf('!');
         if(ix>=0)
         {
             s = s.Substring(ix + 1);
-        }
+        }        
         if (s.IndexOfAny(_addressChars) >=0) return false;
         return IsValidCellAddress(s)==false;
     }
