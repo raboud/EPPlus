@@ -44,7 +44,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             {"<>", new Token("<>", TokenType.Operator)},
         };
 
-
+        private bool _r1c1;
         public static ISourceCodeTokenizer Default
         {
             get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
@@ -54,9 +54,9 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
         }
 
-        public OptimizedSourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
-            : this(new TokenFactory(functionRepository, nameValueProvider, r1c1))
+        public OptimizedSourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)            
         {
+            _r1c1 = r1c1;
         }
         public OptimizedSourceCodeTokenizer(ITokenFactory tokenFactory)
         {
@@ -330,13 +330,28 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
                 else
                 {
-                    if(IsName(currentString))
+                    if (_r1c1 == true)
                     {
-                        l.Add(new Token(currentString, TokenType.NameValue));
+                        if (ExcelAddressBase.IsR1C1(currentString))
+                        {
+                            l.Add(new Token(currentString, TokenType.ExcelAddressR1C1));
+                        }
+                        else
+                        {
+                            l.Add(new Token(currentString, TokenType.NameValue));
+                        }
+
                     }
                     else
                     {
-                        l.Add(new Token(currentString, TokenType.ExcelAddress));
+                        if (IsName(currentString))
+                        {
+                            l.Add(new Token(currentString, TokenType.NameValue));
+                        }
+                        else
+                        {
+                            l.Add(new Token(currentString, TokenType.ExcelAddress));
+                        }
                     }
                 }
             }
@@ -347,7 +362,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 {
                     l.Add(new Token(currentString, TokenType.Boolean));
                 }
-                else if (IsValidCellAddress(currentString))
+                else if (_r1c1==false && IsValidCellAddress(currentString))
                 {
                     if ((flags & statFlags.isColon) == statFlags.isColon)
                     {
@@ -356,6 +371,17 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     else
                     {
                         l.Add(new Token(currentString, TokenType.ExcelAddress));
+                    }
+                }
+                else if (_r1c1 == true && ExcelAddressBase.IsR1C1(currentString))
+                {
+                    if ((flags & statFlags.isColon) == statFlags.isColon)
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddressR1C1 | TokenType.RangeOffset));
+                    }
+                    else
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddressR1C1));
                     }
                 }
                 else
@@ -387,7 +413,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 #endif
             
         }
-    private static readonly char[] _addressChars = new char[]{':','$', '[', ']'};
+    private static readonly char[] _addressChars = new char[]{':','$', '[', ']', '\''};
     private static bool IsName(string s)
     {
         var ix = s.LastIndexOf('!');
@@ -408,7 +434,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 if (c>='0' && c<='9')
                 {
                     if (i == 0) return false;
-                    numPos = i;
+                    if(numPos == -1) numPos = i;
                 }
                 else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                 {

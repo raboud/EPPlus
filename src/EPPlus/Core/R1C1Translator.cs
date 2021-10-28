@@ -87,7 +87,7 @@ namespace OfficeOpenXml.Core
         /// <returns>The address in A1 notation</returns>        
         public static string FromR1C1(string r1C1Address, int row, int col)
         {
-            if (ExcelAddress.IsTableAddress(r1C1Address)) return r1C1Address;
+            if (ExcelAddressBase.IsTableAddress(r1C1Address)) return r1C1Address;
             var addresses = ExcelAddressBase.SplitFullAddress(r1C1Address);
             var ret = "";
             foreach(var address in addresses)

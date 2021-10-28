@@ -25,11 +25,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
     {
         public static ISourceCodeTokenizer Default
         {
-            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
+            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
         }
         public static ISourceCodeTokenizer R1C1
         {
-            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
+            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
         }
 
 
