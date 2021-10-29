@@ -265,7 +265,7 @@ namespace EPPlusTest.FormulaParsing.ExpressionGraph
         {
             var ctx = ParsingContext.Create();
             const string formula = "IF(3>2;\"Yes\";\"No\")";
-            var tokenizer = new SourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
+            var tokenizer = new OptimizedSourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
             var tokens = tokenizer.Tokenize(formula);
             var expression = _graphBuilder.Build(tokens);
             Assert.AreEqual(1, expression.Expressions.Count());
@@ -280,7 +280,7 @@ namespace EPPlusTest.FormulaParsing.ExpressionGraph
         {
             var ctx = ParsingContext.Create();
             const string formula = "IF(I10>=0;IF(O10>I10;((O10-I10)*$B10)/$C$27;IF(O10<0;(O10*$B10)/$C$27;\"\"));IF(O10<0;((O10-I10)*$B10)/$C$27;IF(O10>0;(O10*$B10)/$C$27;)))";
-            var tokenizer = new SourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
+            var tokenizer = new OptimizedSourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
             var tokens = tokenizer.Tokenize(formula);
             var expression = _graphBuilder.Build(tokens);
             Assert.AreEqual(1, expression.Expressions.Count());
@@ -293,7 +293,7 @@ namespace EPPlusTest.FormulaParsing.ExpressionGraph
             var ctx = ParsingContext.Create();
             const string formula = "++1--2++-3+-1----3-+2";
             // the formula above equals 1+2-3-1+3+2
-            var tokenizer = new SourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
+            var tokenizer = new OptimizedSourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
             var tokens = tokenizer.Tokenize(formula).ToList();
             var expression = _graphBuilder.Build(tokens);
             Assert.AreEqual(11, tokens.Count());
@@ -308,7 +308,7 @@ namespace EPPlusTest.FormulaParsing.ExpressionGraph
         {
             var ctx = ParsingContext.Create();
             const string formula = "++-1--(---2)++-3+-1----3-+2";
-            var tokenizer = new SourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
+            var tokenizer = new OptimizedSourceCodeTokenizer(ctx.Configuration.FunctionRepository, ctx.NameValueProvider);
             var tokens = tokenizer.Tokenize(formula).ToList();
         }
 

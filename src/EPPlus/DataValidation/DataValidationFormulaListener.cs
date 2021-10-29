@@ -107,7 +107,7 @@ namespace OfficeOpenXml.DataValidation
             }
             else if(!string.IsNullOrEmpty(address))
             {
-                var tokens = SourceCodeTokenizer.Default.Tokenize(address, _worksheet.Name);
+                var tokens = OptimizedSourceCodeTokenizer.Default.Tokenize(address, _worksheet.Name);
                 if (!tokens.Any()) return false;
                 var addressTokens = tokens.Where(x => x.TokenTypeIsSet(TokenType.ExcelAddress));
                 foreach(var token in addressTokens)

@@ -102,7 +102,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 
 
             short isInString = 0;
-            short bracketCount = 0;
+            short bracketCount = 0, paranthesesCount=0;
             var current =new StringBuilder();
             var pc = '\0';
             var separatorTokens = TokenSeparatorProvider.Instance.Tokens;
@@ -158,17 +158,17 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                                 var pt = l[l.Count - 1];
 
                                 //Remove prefixing +
-                                if (!(pt.TokenTypeIsSet(TokenType.Operator)
+                                if (!(pt.TokenType==TokenType.Operator
                                     ||
-                                    pt.TokenTypeIsSet(TokenType.Negator)
+                                    pt.TokenType==TokenType.Negator
                                     ||
-                                    pt.TokenTypeIsSet(TokenType.OpeningParenthesis)
+                                    pt.TokenType==TokenType.OpeningParenthesis
                                     ||
-                                    pt.TokenTypeIsSet(TokenType.Comma)
+                                    pt.TokenType==TokenType.Comma
                                     ||
-                                    pt.TokenTypeIsSet(TokenType.SemiColon)
+                                    pt.TokenType==TokenType.SemiColon
                                     ||
-                                    pt.TokenTypeIsSet(TokenType.OpeningEnumerable)))
+                                    pt.TokenType==TokenType.OpeningEnumerable))
                                 {
                                     l.Add(_charTokens[c]);
                                 }
@@ -181,6 +181,14 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             else
                             {
                                 l.Add(_charTokens[c]);
+                            }
+                            if(c=='(')
+                            {
+                                paranthesesCount++;
+                            }
+                            else if(c==')')
+                            {
+                                paranthesesCount--;
                             }
                         }
                     }
@@ -229,6 +237,19 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 pc = c;
             }
             HandleToken(l, pc, current, ref flags);
+            if (isInString != 0)
+            {
+                throw new FormatException("Unterminated string");
+            }
+            else if (paranthesesCount != 0)
+            {
+                throw new FormatException("Number of opened and closed parentheses does not match");
+            }
+            else if (bracketCount != 0)
+            {
+                throw new FormatException("Number of opened and closed brackets does not match");
+            }
+
             return l;
         }
 
@@ -238,15 +259,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             int p= 0;
             while (i >= 0)
             {
-                if (l[i].TokenTypeIsSet(TokenType.OpeningParenthesis))
+                if ((l[i].TokenType & TokenType.OpeningParenthesis) == TokenType.OpeningParenthesis)
                 {
                     p--;
                 }
-                else if(l[i].TokenTypeIsSet(TokenType.ClosingParenthesis))
+                else if((l[i].TokenType & TokenType.ClosingParenthesis) == TokenType.ClosingParenthesis)
                 {
                     p++;
                 }
-                else if (l[i].TokenTypeIsSet(TokenType.Function) && l[i].Value.Equals("offset", StringComparison.OrdinalIgnoreCase) && p==0)
+                else if ((l[i].TokenType & TokenType.Function) == TokenType.Function && l[i].Value.Equals("offset", StringComparison.OrdinalIgnoreCase) && p==0)
                 {
                     l[i] = new Token(l[i].Value, TokenType.RangeOffset | TokenType.Function);
                 }
@@ -265,17 +286,21 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 else
                 {
                     var pt = l[l.Count - 1];
-                    if (pt.TokenTypeIsSet(TokenType.Operator)
+                    if((pt.TokenTypeIsSet(TokenType.Operator) && pt.Value == "+"))  //Replace + by -
+                    {
+                        l[l.Count - 1] = _charTokens['-'];
+                    }
+                    else if (pt.TokenType==TokenType.Operator
                         ||
-                        pt.TokenTypeIsSet(TokenType.Negator)
+                        pt.TokenType == TokenType.Negator
                         ||
-                        pt.TokenTypeIsSet(TokenType.OpeningParenthesis)
+                        pt.TokenType == TokenType.OpeningParenthesis
                         ||
-                        pt.TokenTypeIsSet(TokenType.Comma)
+                        pt.TokenType == TokenType.Comma
                         ||
-                        pt.TokenTypeIsSet(TokenType.SemiColon)
+                        pt.TokenType == TokenType.SemiColon
                         ||
-                        pt.TokenTypeIsSet(TokenType.OpeningEnumerable))
+                        pt.TokenType == TokenType.OpeningEnumerable)
                     {
                         l.Add(new Token("-", TokenType.Negator));
                     }

@@ -37,7 +37,7 @@ namespace OfficeOpenXml.ExternalReferences
                         IEnumerable<Token> t = ws._formulaTokens?.GetValue(enumerator.Row, enumerator.Column);
                         if (t == null)
                         {
-                            t = SourceCodeTokenizer.Default.Tokenize(formula, ws.Name);
+                            t = OptimizedSourceCodeTokenizer.Default.Tokenize(formula, ws.Name);
                         }
                         if (HasFormulaExternalReference(t))
                         {
@@ -83,7 +83,7 @@ namespace OfficeOpenXml.ExternalReferences
                         IEnumerable<Token> t = ws._formulaTokens?.GetValue(enumerator.Row, enumerator.Column);
                         if (t == null)
                         {
-                            t = SourceCodeTokenizer.Default.Tokenize(formula, ws.Name);
+                            t = OptimizedSourceCodeTokenizer.Default.Tokenize(formula, ws.Name);
                         }
                         if (HasFormulaExternalReference(wb, ix, t, out string newFormula, false))
                         {
@@ -134,7 +134,7 @@ namespace OfficeOpenXml.ExternalReferences
                 }
                 else
                 {
-                    var t = SourceCodeTokenizer.Default.Tokenize(n.Formula, wsName);
+                    var t = OptimizedSourceCodeTokenizer.Default.Tokenize(n.Formula, wsName);
                     //if (ix == -1 && HasFormulaExternalReference(t))
                     //{
                     //    //deletedNames.Add(n);

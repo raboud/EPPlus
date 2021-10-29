@@ -21,51 +21,51 @@ using OfficeOpenXml.FormulaParsing.LexicalAnalysis.PostProcessing;
 
 namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 {
-    public class SourceCodeTokenizer : ISourceCodeTokenizer
-    {
-        public static ISourceCodeTokenizer Default
-        {
-            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
-        }
-        public static ISourceCodeTokenizer R1C1
-        {
-            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
-        }
+    //public class SourceCodeTokenizer : ISourceCodeTokenizer
+    //{
+    //    public static ISourceCodeTokenizer Default
+    //    {
+    //        get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
+    //    }
+    //    public static ISourceCodeTokenizer R1C1
+    //    {
+    //        get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
+    //    }
 
 
-        public SourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
-            : this(new TokenFactory(functionRepository, nameValueProvider, r1c1))
-        {
+    //    public SourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
+    //        : this(new TokenFactory(functionRepository, nameValueProvider, r1c1))
+    //    {
 
-        }
-        public SourceCodeTokenizer(ITokenFactory tokenFactory)
-        {
-            _tokenFactory = tokenFactory;
-        }
+    //    }
+    //    public SourceCodeTokenizer(ITokenFactory tokenFactory)
+    //    {
+    //        _tokenFactory = tokenFactory;
+    //    }
 
-        private readonly ITokenFactory _tokenFactory;
+    //    private readonly ITokenFactory _tokenFactory;
 
-        public IEnumerable<Token> Tokenize(string input)
-        {
-            return Tokenize(input, null);
-        }
-        public IEnumerable<Token> Tokenize(string input, string worksheet)
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                return Enumerable.Empty<Token>();
-            }
-            // MA 1401: Ignore leading plus in formula.
-            input = input.TrimStart('+');
-            var context = new TokenizerContext(input, worksheet, _tokenFactory);
-            var handler = context.CreateHandler();
-            while (handler.HasMore())
-            {
-                handler.Next();
-            }
-            context.PostProcess();
+    //    public IEnumerable<Token> Tokenize(string input)
+    //    {
+    //        return Tokenize(input, null);
+    //    }
+    //    public IEnumerable<Token> Tokenize(string input, string worksheet)
+    //    {
+    //        if (string.IsNullOrEmpty(input))
+    //        {
+    //            return Enumerable.Empty<Token>();
+    //        }
+    //        // MA 1401: Ignore leading plus in formula.
+    //        input = input.TrimStart('+');
+    //        var context = new TokenizerContext(input, worksheet, _tokenFactory);
+    //        var handler = context.CreateHandler();
+    //        while (handler.HasMore())
+    //        {
+    //            handler.Next();
+    //        }
+    //        context.PostProcess();
 
-            return context.Result;
-        }
-    }
+    //        return context.Result;
+    //    }
+    //}
 }

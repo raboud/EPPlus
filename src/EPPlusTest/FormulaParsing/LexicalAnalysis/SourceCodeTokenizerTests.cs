@@ -42,13 +42,13 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
     [TestClass]
     public class SourceCodeTokenizerTests
     {
-        private SourceCodeTokenizer _tokenizer;
+        private OptimizedSourceCodeTokenizer _tokenizer;
 
         [TestInitialize]
         public void Setup()
         {
             var context = ParsingContext.Create();
-            _tokenizer = new SourceCodeTokenizer(context.Configuration.FunctionRepository, null);
+            _tokenizer = new OptimizedSourceCodeTokenizer(context.Configuration.FunctionRepository, null);
         }
 
         [TestCleanup]
@@ -62,10 +62,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "\"abc123\"";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(3, tokens.Count());
-            Assert.IsTrue(tokens.First().TokenTypeIsSet(TokenType.String));
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.StringContent));
-            Assert.IsTrue(tokens.Last().TokenTypeIsSet(TokenType.String));
+            Assert.AreEqual(1, tokens.Count());
+            Assert.IsTrue(tokens.ElementAt(0).TokenTypeIsSet(TokenType.StringContent));
         }
 
         [TestMethod]
@@ -74,7 +72,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "\"ab(c)d\"";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(3, tokens.Count());
+            Assert.AreEqual(1, tokens.Count());
         }
 
         [TestMethod]
@@ -82,9 +80,9 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = @"""          """;
             var tokens = _tokenizer.Tokenize(input);
-            Assert.AreEqual(3, tokens.Count());
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.StringContent));
-            Assert.AreEqual(10, tokens.ElementAt(1).Value.Length);
+            Assert.AreEqual(1, tokens.Count());
+            Assert.IsTrue(tokens.ElementAt(0).TokenTypeIsSet(TokenType.StringContent));
+            Assert.AreEqual(10, tokens.ElementAt(0).Value.Length);
         }
 
         [TestMethod]
@@ -129,11 +127,10 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "{\"1\",\"2\"}";
             var tokens = _tokenizer.Tokenize(input).ToArray();
 
-            Assert.AreEqual(9, tokens.Count());
+            Assert.AreEqual(5, tokens.Count());
             Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.OpeningEnumerable));
-            Assert.IsTrue(tokens[1].TokenTypeIsSet(TokenType.String));
-            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.StringContent));
-            Assert.IsTrue(tokens[8].TokenTypeIsSet(TokenType.ClosingEnumerable));
+            Assert.IsTrue(tokens[1].TokenTypeIsSet(TokenType.StringContent));
+            Assert.IsTrue(tokens[4].TokenTypeIsSet(TokenType.ClosingEnumerable));
         }
 
         [TestMethod]
@@ -158,8 +155,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = "\"hello\"\"world\"";
             var tokens = _tokenizer.Tokenize(input);
-            Assert.AreEqual(3, tokens.Count());
-            Assert.AreEqual("hello\"world", tokens.ElementAt(1).Value);
+            Assert.AreEqual(1, tokens.Count());
+            Assert.AreEqual("hello\"world", tokens.ElementAt(0).Value);
         }
 
         [TestMethod]
@@ -171,7 +168,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             //}
             var input = "\"\"\"\"\"\"";
             var tokens = _tokenizer.Tokenize(input);
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.StringContent));
+            Assert.IsTrue(tokens.ElementAt(0).TokenTypeIsSet(TokenType.StringContent));
         }
 
         [TestMethod]
@@ -179,7 +176,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = "\"*\"";
             var tokens = _tokenizer.Tokenize(input);
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.StringContent));
+            Assert.IsTrue(tokens.ElementAt(0).TokenTypeIsSet(TokenType.StringContent));
         }
 
         [TestMethod]

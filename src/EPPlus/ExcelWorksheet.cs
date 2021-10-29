@@ -141,7 +141,14 @@ namespace OfficeOpenXml
                     }
                     else
                     {
-                        f += token.Value;
+                        if(token.TokenTypeIsSet(TokenType.StringContent))
+                        {
+                            f += "\"" + token.Value.Replace("\"", "\"\"") + "\"";
+                        }
+                        else
+                        {
+                            f += token.Value;
+                        }
                     }
                 }
                 return f;
@@ -1749,7 +1756,7 @@ namespace OfficeOpenXml
                             string formula = ConvertUtil.ExcelDecodeString(xr.ReadElementContentAsString());
                             if (formula != "")
                             {
-                                _sharedFormulas.Add(sfIndex, new Formulas(SourceCodeTokenizer.Default) { Index = sfIndex, Formula = formula, Address = fAddress, StartRow = address._fromRow, StartCol = address._fromCol });
+                                _sharedFormulas.Add(sfIndex, new Formulas(OptimizedSourceCodeTokenizer.Default) { Index = sfIndex, Formula = formula, Address = fAddress, StartRow = address._fromRow, StartCol = address._fromCol });
                             }
                         }
                         else
@@ -1767,7 +1774,7 @@ namespace OfficeOpenXml
                             WriteArrayFormulaRange(refAddress, afIndex);
                         }
 
-                        _sharedFormulas.Add(afIndex, new Formulas(SourceCodeTokenizer.Default) { Index = afIndex, Formula = formula, Address = refAddress, StartRow = address._fromRow, StartCol = address._fromCol, IsArray = true });
+                        _sharedFormulas.Add(afIndex, new Formulas(OptimizedSourceCodeTokenizer.Default) { Index = afIndex, Formula = formula, Address = refAddress, StartRow = address._fromRow, StartCol = address._fromCol, IsArray = true });
                     }
                     else if (t=="dataTable") //Unsupported
                     {

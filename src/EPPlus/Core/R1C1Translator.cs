@@ -39,7 +39,7 @@ namespace OfficeOpenXml.Core
         /// <returns>The formula in A1 notation</returns>
         public static string FromR1C1Formula(string formula, int row, int col)
         {
-            var lexer = new Lexer(SourceCodeTokenizer.R1C1, new SyntacticAnalyzer());
+            var lexer = new Lexer(OptimizedSourceCodeTokenizer.R1C1/*, new SyntacticAnalyzer()*/);
             var tokens = lexer.Tokenize(formula, null).ToArray();
             for(var ix = 0; ix < tokens.Length; ix++)
             {
@@ -51,7 +51,7 @@ namespace OfficeOpenXml.Core
                 }
 
             }
-            var ret = string.Join("", tokens.Select(x => x.TokenTypeIsSet(TokenType.StringContent) ? x.Value.Replace("\"", "\"\"") :  x.Value).ToArray());
+            var ret = string.Join("", tokens.Select(x => x.TokenTypeIsSet(TokenType.StringContent) ? "\"" + x.Value.Replace("\"", "\"\"") + "\"" :  x.Value).ToArray());
             return ret;
         }
         /// <summary>
@@ -63,7 +63,7 @@ namespace OfficeOpenXml.Core
         /// <returns>The formula in R1C1 notation</returns>        
         public static string ToR1C1Formula(string formula, int row, int col)
         {
-            var lexer = new Lexer(SourceCodeTokenizer.Default, new SyntacticAnalyzer());
+            var lexer = new Lexer(OptimizedSourceCodeTokenizer.Default/*, new SyntacticAnalyzer()*/);
             var tokens = lexer.Tokenize(formula, null).ToArray();
             for (var ix = 0; ix < tokens.Length; ix++)
             {
@@ -73,9 +73,8 @@ namespace OfficeOpenXml.Core
                     var part = ToR1C1(new ExcelAddressBase(token.Value), row, col);
                     tokens[ix] = tokens[ix].CloneWithNewValue(part);
                 }
-
             }
-            var ret = string.Join("", tokens.Select(x => x.TokenTypeIsSet(TokenType.StringContent) ? x.Value.Replace("\"", "\"\"") : x.Value).ToArray());
+            var ret = string.Join("", tokens.Select(x => x.TokenTypeIsSet(TokenType.StringContent) ? "\"" + x.Value.Replace("\"", "\"\"") + "\"" : x.Value).ToArray());
             return ret;
         }
         /// <summary>

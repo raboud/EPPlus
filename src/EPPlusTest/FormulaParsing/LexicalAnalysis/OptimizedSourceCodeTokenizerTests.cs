@@ -184,10 +184,10 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = "SUM(OFFSET(A3, -1, 0):A1)";
             var tokens = _tokenizer.Tokenize(input).ToList();
-            var tokens2 = SourceCodeTokenizer.Default.Tokenize(input).ToList();
+            var tokens2 = OptimizedSourceCodeTokenizer.Default.Tokenize(input).ToList();
             for(int i=0;i<tokens.Count();i++)
             {
-                Assert.IsTrue(tokens[i].TokenTypeIsSet(tokens2[i]._tokenType));
+                Assert.IsTrue(tokens[i].TokenTypeIsSet(tokens2[i].TokenType));
                 Assert.AreEqual(tokens[i].Value, tokens2[i].Value);
             }
         }

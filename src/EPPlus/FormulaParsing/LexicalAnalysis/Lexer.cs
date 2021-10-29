@@ -22,19 +22,17 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
     public class Lexer : ILexer
     {
         public Lexer(FunctionRepository functionRepository, INameValueProvider nameValueProvider)
-            :this(new OptimizedSourceCodeTokenizer(functionRepository, nameValueProvider), new SyntacticAnalyzer())
+            :this(new OptimizedSourceCodeTokenizer(functionRepository, nameValueProvider))
         {
 
         }
 
-        public Lexer(ISourceCodeTokenizer tokenizer, ISyntacticAnalyzer analyzer)
+        public Lexer(ISourceCodeTokenizer tokenizer)
         {
             _tokenizer = tokenizer;
-            _analyzer = analyzer;
         }
 
         private readonly ISourceCodeTokenizer _tokenizer;
-        private readonly ISyntacticAnalyzer _analyzer;
         public IEnumerable<Token> Tokenize(string input)
         {
             return Tokenize(input, null);
@@ -42,7 +40,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         public IEnumerable<Token> Tokenize(string input, string worksheet)
         {
             var tokens = _tokenizer.Tokenize(input, worksheet);
-            _analyzer.Analyze(tokens);
             return tokens;
         }
     }
