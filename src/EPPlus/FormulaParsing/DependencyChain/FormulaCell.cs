@@ -16,20 +16,28 @@ using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 
 namespace OfficeOpenXml.FormulaParsing
 {
-    internal class FormulaCell
+    internal class FormulaCellBase
     {
         internal int Index { get; set; }
         internal int wsIndex { get; set; }
         internal int Row { get; set; }
         internal int Column { get; set; }
-        internal string Formula { get; set; }
-
         internal string CircularRefAddress { get; set; }
-        internal List<Token> Tokens { get; set; }
         internal int tokenIx = 0;
         internal int addressIx = 0;
         internal CellStoreEnumerator<object> iterator;
         internal ExcelWorksheet iteratorWs;
         internal ExcelWorksheet ws;
     }
+
+    internal class FormulaCell : FormulaCellBase
+    {
+        internal List<Token> Tokens { get; set; }
+        internal string Formula { get; set; }
+    }
+    internal class SharedFormulaCell
+    {
+        internal int ShIndex;
+    }
+
 }

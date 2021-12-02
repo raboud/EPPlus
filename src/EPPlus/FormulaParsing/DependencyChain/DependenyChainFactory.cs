@@ -129,14 +129,24 @@ namespace OfficeOpenXml.FormulaParsing
                 var id = ExcelCellBase.GetCellId(ws.IndexInList, fs.Row, fs.Column);
                 if (!depChain.index.ContainsKey(id))
                 {
-                    var f = new FormulaCell() { ws = ws, wsIndex = ws.IndexInList, Row = fs.Row, Column = fs.Column };
+                    FormulaCellBase f;
                     if (fs.Value is int)
                     {
-                        f.Formula = ws._sharedFormulas[(int)fs.Value].GetFormula(fs.Row, fs.Column, ws.Name);
+                        f=new SharedFormulaCell()
+                        {
+                            ShIndex = (int)fs.Value;
+                        }                        
                     }
                     else
                     {
-                        f.Formula = fs.Value.ToString();
+                        f = new FormulaCell() 
+                        { 
+                            ws = ws, 
+                            wsIndex = ws.IndexInList, 
+                            Row = fs.Row, 
+                            Column = fs.Column,
+                            Formula = fs.Value.ToString();
+                        };                        
                     }
                     if (!string.IsNullOrEmpty(f.Formula))
                     {
