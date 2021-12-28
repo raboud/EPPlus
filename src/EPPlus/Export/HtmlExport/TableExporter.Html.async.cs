@@ -32,19 +32,9 @@ namespace OfficeOpenXml.Export.HtmlExport
         /// <returns>A html table</returns>
         public async Task<string> GetHtmlStringAsync()
         {
-            return await GetHtmlStringAsync(HtmlTableExportOptions.Default);
-        }
-
-        /// <summary>
-        /// Exports an <see cref="ExcelTable"/> to a html string
-        /// </summary>
-        /// <param name="options"><see cref="HtmlTableExportOptions">Options</see> for the export</param>
-        /// <returns>A html table</returns>
-        public async Task<string> GetHtmlStringAsync(HtmlTableExportOptions options)
-        {
             using (var ms = new MemoryStream())
             {
-                await RenderHtmlAsync(ms, options);
+                await RenderHtmlAsync(ms);
                 ms.Position = 0;
                 using (var sr = new StreamReader(ms))
                 {
@@ -53,20 +43,16 @@ namespace OfficeOpenXml.Export.HtmlExport
             }
         }
 
+
         public async Task RenderHtmlAsync(Stream stream)
         {
-            await RenderHtmlAsync(stream, HtmlTableExportOptions.Default);
-        }
-
-        public async Task RenderHtmlAsync(Stream stream, HtmlTableExportOptions options)
-        {
-            Require.Argument(options).IsNotNull("options");
+            Require.Argument(Settings).IsNotNull("options");
             if(!stream.CanWrite)
             {
                 throw new IOException("Parameter stream must be a writeable System.IO.Stream");
             }
             
-            var writer = new EpplusHtmlWriter(stream);
+            var writer = new EpplusHtmlWriter(stream, Settings.Encoding);
             if (_table.TableStyle != TableStyles.None)
             {
                 writer.AddAttribute(HtmlAttributes.Class, $"{TableClass} {TableStyleClassPrefix}{_table.TableStyle.ToString().ToLowerInvariant()}");
@@ -77,16 +63,15 @@ namespace OfficeOpenXml.Export.HtmlExport
             }
             await writer.RenderBeginTagAsync(HtmlElements.Table);
 
-            await writer.ApplyFormatIncreaseIndentAsync(options.Minify);
+            await writer.ApplyFormatIncreaseIndentAsync(Settings.Minify);
             if (_table.ShowHeader)
             {
-                await RenderHeaderRowAsync(options.Minify, writer);
+                await RenderHeaderRowAsync(Settings.Minify, writer);
             }
             // table rows
-            await RenderTableRowsAsync(writer, options.Minify);
+            await RenderTableRowsAsync(writer, Settings.Minify);
             // end tag table
             await writer.RenderEndTagAsync();
-
         }
 
         private async Task RenderTableRowsAsync(EpplusHtmlWriter writer, bool formatHtml)

@@ -22,26 +22,14 @@ using System.Threading.Tasks;
 
 namespace OfficeOpenXml.Export.HtmlExport
 {
-    internal partial class EpplusHtmlWriter
+    internal partial class EpplusHtmlWriter : HtmlWriterBase
     {
-        public const string IndentWhiteSpace = "  ";
-        private bool _newLine;
-
-        public EpplusHtmlWriter(Stream stream)
+        public EpplusHtmlWriter(Stream stream, Encoding encoding) : base(stream, encoding)
         {
-            _stream = stream;
-            _writer = new StreamWriter(stream);
         }
 
-        private readonly Stream _stream;
-        private readonly StreamWriter _writer;
         private readonly Stack<string> _elementStack = new Stack<string>();
         private readonly List<EpplusHtmlAttribute> _attributes = new List<EpplusHtmlAttribute>();
-        internal Dictionary<ulong, int> _styleCache=new Dictionary<ulong, int>();
-
-
-        public int Indent { get; set; }
-
 
         public void AddAttribute(string attributeName, string attributeValue)
         {
@@ -49,41 +37,6 @@ namespace OfficeOpenXml.Export.HtmlExport
             Require.Argument(attributeValue).IsNotNullOrEmpty("attributeValue");
             _attributes.Add(new EpplusHtmlAttribute { AttributeName = attributeName, Value = attributeValue });
         }
-
-        internal void ApplyFormat(bool minify)
-        {
-            if (minify == false)
-            {
-                WriteLine();
-            }
-        }
-
-        internal void ApplyFormatIncreaseIndent(bool minify)
-        {
-            if (minify==false)
-            {
-                WriteLine();
-                Indent++;
-            }
-        }
-
-        internal void ApplyFormatDecreaseIndent(bool minify)
-        {
-            if (minify == false)
-            {
-                WriteLine();
-                Indent--;
-            }
-        }
-
-        private void WriteIndent()
-        {
-            for (var x = 0; x < Indent; x++)
-            {
-                _writer.Write(IndentWhiteSpace);
-            }
-        }
-
         public void RenderBeginTag(string elementName, bool closeElement = false)
         {
             _newLine = false;
@@ -119,28 +72,18 @@ namespace OfficeOpenXml.Export.HtmlExport
             _writer.Flush();
         }
 
-        public void WriteLine()
-        {
-            _newLine = true;
-            _writer.WriteLine();
-        }
-
-        public void Write(string text)
-        {
-            _writer.Write(text);
-        }
         internal void SetClassAttributeFromStyle(int styleId, ExcelStyles styles)
         {
-            if(styleId <= 0 || styleId >= styles.CellXfs.Count)
+            if (styleId <= 0 || styleId >= styles.CellXfs.Count)
             {
                 return;
             }
             var xfs = styles.CellXfs[styleId];
-            if (xfs.FontId <= 0 && xfs.BorderId <= 0 && xfs.FillId <= 0)
+            if (HasStyle(xfs) == false)
             {
                 return;
             }
-            var key = (ulong)(xfs.FontId << 32 | xfs.BorderId << 16 | xfs.FillId);
+            string key = GetStyleKey(xfs);
             int id;
             if (_styleCache.ContainsKey(key))
             {
@@ -154,6 +97,5 @@ namespace OfficeOpenXml.Export.HtmlExport
 
             AddAttribute("class", $"s{id}");
         }
-
     }
 }

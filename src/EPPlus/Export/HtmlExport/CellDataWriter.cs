@@ -11,6 +11,7 @@
   05/16/2020         EPPlus Software AB           ExcelTable Html Export
  *************************************************************************************************/
 using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using OfficeOpenXml.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,22 +22,29 @@ namespace OfficeOpenXml.Export.HtmlExport
     internal class CellDataWriter
     {
         private readonly CompileResultFactory _compileResultFactory = new CompileResultFactory();
-        public void Write(ExcelRangeBase cell, string dataType, EpplusHtmlWriter writer, HtmlTableExportOptions options)
+        public void Write(ExcelRangeBase cell, string dataType, EpplusHtmlWriter writer, HtmlTableExportSettings settings, bool addRowScope)
         {
             if (dataType != ColumnDataTypeManager.HtmlDataTypes.String)
             {
-                var v = HtmlRawDataProvider.GetRawValue(cell, dataType, options.Culture);
+                var v = HtmlRawDataProvider.GetRawValue(cell, dataType);
                 if (string.IsNullOrEmpty(v)==false)
                 {
                     writer.AddAttribute("data-value", v);
                 }
             }
-            writer.RenderBeginTag(HtmlElements.TableData);
+            if (settings.Accessibility.TableSettings.AddAccessibilityAttributes)
+            {
+                writer.AddAttribute("role", "cell");
+                if(addRowScope)
+                {
+                    writer.AddAttribute("scope", "row");
+                }
+            }
             writer.SetClassAttributeFromStyle(cell.StyleID, cell.Worksheet.Workbook.Styles);
-            // TODO: apply format
-            writer.Write(cell.Text);
+            writer.RenderBeginTag(HtmlElements.TableData);
+            writer.Write(ValueToTextHandler.GetFormattedText(cell.Value, cell.Worksheet.Workbook, cell.StyleID, false, settings.Culture));
             writer.RenderEndTag();
-            writer.ApplyFormat(options.Minify);
+            writer.ApplyFormat(settings.Minify);
         }
     }
 }
