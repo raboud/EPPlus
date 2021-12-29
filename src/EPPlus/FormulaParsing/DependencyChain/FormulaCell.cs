@@ -35,7 +35,7 @@ namespace OfficeOpenXml.FormulaParsing
         internal List<Token> Tokens { get; set; }
         internal string Formula { get; set; }
     }
-    internal class SharedFormulaCell
+    internal class SharedFormulaCell : FormulaCell
     {
         internal int ShIndex;
     }

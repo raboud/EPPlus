@@ -129,13 +129,13 @@ namespace OfficeOpenXml.FormulaParsing
                 var id = ExcelCellBase.GetCellId(ws.IndexInList, fs.Row, fs.Column);
                 if (!depChain.index.ContainsKey(id))
                 {
-                    FormulaCellBase f;
+                    FormulaCell f;
                     if (fs.Value is int)
                     {
-                        f=new SharedFormulaCell()
+                        f = new SharedFormulaCell()
                         {
-                            ShIndex = (int)fs.Value;
-                        }                        
+                            ShIndex = (int)fs.Value
+                        };
                     }
                     else
                     {
@@ -145,7 +145,7 @@ namespace OfficeOpenXml.FormulaParsing
                             wsIndex = ws.IndexInList, 
                             Row = fs.Row, 
                             Column = fs.Column,
-                            Formula = fs.Value.ToString();
+                            Formula = fs.Value.ToString()
                         };                        
                     }
                     if (!string.IsNullOrEmpty(f.Formula))
