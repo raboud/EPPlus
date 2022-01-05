@@ -59,9 +59,9 @@ namespace OfficeOpenXml
 	/// </summary>
     public class ExcelWorksheet : XmlHelper, IEqualityComparer<ExcelWorksheet>, IDisposable
     {
-        internal class Formulas
+        internal class SharedFormula
         {
-            public Formulas(ISourceCodeTokenizer tokenizer)
+            public SharedFormula(ISourceCodeTokenizer tokenizer)
             {
                 _tokenizer = tokenizer;
             }
@@ -89,13 +89,26 @@ namespace OfficeOpenXml
             public int StartRow { get; set; }
             public int StartCol { get; set; }
 
-            internal IEnumerable<Token> Tokens { get; set; }
+            internal List<Token> Tokens { get; set; }
 
+            internal IEnumerable<Token> GetTokensFromOffset(string currentWs, int row, int column)
+            {
+                if (_tokenOffsetCollection == null)
+                {
+                    var tokens = _tokenizer.Tokenize(Formula, currentWs).ToList();
+                    _tokenOffsetCollection = new TokenOffsetCollection(currentWs, tokens); 
+                }
+                _tokenOffsetCollection.SetOffset(row, column);
+                return _tokenOffsetCollection;
+            }
+            
+
+            private TokenOffsetCollection _tokenOffsetCollection;
             internal void SetTokens(string worksheet)
             {
                 if (Tokens == null)
                 {
-                    Tokens = _tokenizer.Tokenize(Formula, worksheet);
+                    Tokens = _tokenizer.Tokenize(Formula, worksheet).ToList();
                 }
             }
             internal string GetFormula(int row, int column, string worksheet)
@@ -153,9 +166,9 @@ namespace OfficeOpenXml
                 }
                 return f;
             }
-            internal Formulas Clone()
+            internal SharedFormula Clone()
             {
-                return new Formulas(_tokenizer)
+                return new SharedFormula(_tokenizer)
                 {
                     Index = Index,
                     Address = Address,
@@ -165,6 +178,7 @@ namespace OfficeOpenXml
                     StartCol = StartCol
                 };
             }
+            
         }
         /// <summary>
         /// Keeps track of meta data referencing cells or values.
@@ -398,7 +412,7 @@ namespace OfficeOpenXml
         internal CellStore<int> _threadedCommentsStore;
         internal CellStore<MetaDataReference> _metadataStore;
 
-        internal Dictionary<int, Formulas> _sharedFormulas = new Dictionary<int, Formulas>();
+        internal Dictionary<int, SharedFormula> _sharedFormulas = new Dictionary<int, SharedFormula>();
         internal RangeSorter _rangeSorter;
         internal int _minCol = ExcelPackage.MaxColumns;
         internal int _maxCol = 0;
@@ -1755,7 +1769,7 @@ namespace OfficeOpenXml
                             string formula = ConvertUtil.ExcelDecodeString(xr.ReadElementContentAsString());
                             if (formula != "")
                             {
-                                _sharedFormulas.Add(sfIndex, new Formulas(OptimizedSourceCodeTokenizer.Default) { Index = sfIndex, Formula = formula, Address = fAddress, StartRow = address._fromRow, StartCol = address._fromCol });
+                                _sharedFormulas.Add(sfIndex, new SharedFormula(OptimizedSourceCodeTokenizer.Default) { Index = sfIndex, Formula = formula, Address = fAddress, StartRow = address._fromRow, StartCol = address._fromCol });
                             }
                         }
                         else
@@ -1773,7 +1787,7 @@ namespace OfficeOpenXml
                             WriteArrayFormulaRange(refAddress, afIndex);
                         }
 
-                        _sharedFormulas.Add(afIndex, new Formulas(OptimizedSourceCodeTokenizer.Default) { Index = afIndex, Formula = formula, Address = refAddress, StartRow = address._fromRow, StartCol = address._fromCol, IsArray = true });
+                        _sharedFormulas.Add(afIndex, new SharedFormula(OptimizedSourceCodeTokenizer.Default) { Index = afIndex, Formula = formula, Address = refAddress, StartRow = address._fromRow, StartCol = address._fromCol, IsArray = true });
                     }
                     else if (t=="dataTable") //Unsupported
                     {

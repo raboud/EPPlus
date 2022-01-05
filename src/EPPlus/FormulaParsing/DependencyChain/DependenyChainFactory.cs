@@ -132,10 +132,12 @@ namespace OfficeOpenXml.FormulaParsing
                     FormulaCell f;
                     if (fs.Value is int)
                     {
+                        var sf = ws._sharedFormulas[(int)fs.Value];
                         f = new SharedFormulaCell()
                         {
                             ShIndex = (int)fs.Value
                         };
+                        var tokens = sf.GetTokensFromOffset(Range.Worksheet.Name, fs.Row - sf.StartRow, fs.Column- sf.StartCol);
                     }
                     else
                     {

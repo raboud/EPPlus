@@ -10,7 +10,7 @@ namespace OfficeOpenXml.FormulaParsing
         [TestMethod]
         public void SharedFormulasShouldNotEffectFullColumn()
         {
-            var f=new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(C:D)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
+            var f=new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(C:D)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
 
             var fA1= f.GetFormula(1, 1, "sheet1");
             var fA2 = f.GetFormula(2, 1, "sheet1");
@@ -25,7 +25,7 @@ namespace OfficeOpenXml.FormulaParsing
         [TestMethod]
         public void SharedFormulasShouldNotEffectFullRow()
         {
-            var f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(3:4)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
+            var f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(3:4)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
 
             var fA1 = f.GetFormula(1, 1, "sheet1");
             var fA2 = f.GetFormula(2, 1, "sheet1");
@@ -40,7 +40,7 @@ namespace OfficeOpenXml.FormulaParsing
         [TestMethod]
         public void SharedFormulasShouldNotEffectFullSheet()
         {
-            var f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(A:XFD)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
+            var f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default) { Index = 0, Formula = "SUM(A:XFD)", Address = "A1:B2", StartRow = 1, StartCol = 1 };
 
             var fA1 = f.GetFormula(1, 1, "sheet1");
             var fA2 = f.GetFormula(2, 1, "sheet1");
@@ -51,6 +51,22 @@ namespace OfficeOpenXml.FormulaParsing
             Assert.AreEqual("SUM(A:XFD)", fA2);
             Assert.AreEqual("SUM(A:XFD)", fB1);
             Assert.AreEqual("SUM(A:XFD)", fB2);
+        }
+        [TestMethod]
+        public void SharedFormulaDependencyChain()
+        {
+            using (var p = new ExcelPackage())
+            {
+                var ws = p.Workbook.Worksheets.Add("Sheet1");
+
+                ws.Cells[1, 1].Value = 1;
+                ws.Cells[2, 1].Value = 2;
+                ws.Cells[3, 1].Value = 3;
+
+                ws.Cells[1, 2, 3, 2].Formula = "$A$3+(A1+1)";
+
+                ws.Calculate();
+            }
         }
     }
 }

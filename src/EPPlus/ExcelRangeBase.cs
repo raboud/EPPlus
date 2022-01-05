@@ -280,7 +280,7 @@ namespace OfficeOpenXml
             }
 
             range.CheckAndSplitSharedFormula(address);
-            ExcelWorksheet.Formulas f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default);
+            ExcelWorksheet.SharedFormula f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default);
             f.Formula = value;
             f.Index = range._worksheet.GetMaxShareFunctionIndex(IsArray);
             f.Address = address.FirstAddress;
@@ -1085,7 +1085,7 @@ namespace OfficeOpenXml
             if (formula[0] == '=') formula = formula.Substring(1); // remove any starting equalsign.
             range.CheckAndSplitSharedFormula(range);
 
-            ExcelWorksheet.Formulas f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default);
+            ExcelWorksheet.SharedFormula f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default);
             f.Formula = formula;
             f.Address = range.FirstAddress;
             f.StartCol = range.Start.Column;
@@ -1104,7 +1104,7 @@ namespace OfficeOpenXml
             }
         }
 
-        private void SetFormulaAddress(ExcelRangeBase range, ExcelAddressBase address, ExcelWorksheet.Formulas f)
+        private void SetFormulaAddress(ExcelRangeBase range, ExcelAddressBase address, ExcelWorksheet.SharedFormula f)
         {
             for (int row = address._fromRow; row <= address._toRow; row++)
             {
@@ -1725,7 +1725,7 @@ namespace OfficeOpenXml
                 {
                     if (fIsSet)
                     {
-                        f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default);
+                        f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default);
                         f.Index = _worksheet.GetMaxShareFunctionIndex(false);
                         f.StartCol = fRange._fromCol;
                         f.IsArray = false;
@@ -1759,7 +1759,7 @@ namespace OfficeOpenXml
                 {
                     if (fIsSet)
                     {
-                        f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default);
+                        f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default);
                         f.Index = _worksheet.GetMaxShareFunctionIndex(false);
                         f.IsArray = false;
                         _worksheet._sharedFormulas.Add(f.Index, f);
@@ -1794,7 +1794,7 @@ namespace OfficeOpenXml
                 {
                     if (fIsSet)
                     {
-                        f = new ExcelWorksheet.Formulas(OptimizedSourceCodeTokenizer.Default);
+                        f = new ExcelWorksheet.SharedFormula(OptimizedSourceCodeTokenizer.Default);
                         f.Index = _worksheet.GetMaxShareFunctionIndex(false);
                         f.IsArray = false;
                         _worksheet._sharedFormulas.Add(f.Index, f);
