@@ -132,31 +132,32 @@ namespace OfficeOpenXml.FormulaParsing
                     FormulaCell f;
                     if (fs.Value is int)
                     {
-                        var sf = ws._sharedFormulas[(int)fs.Value];
-                        f = new SharedFormulaCell()
+                        f = new FormulaCell()
                         {
+                            ws=ws,
+                            wsIndex=ws.IndexInList,
+                            Row=fs.Row,
+                            Column=fs.Column,
                             ShIndex = (int)fs.Value
                         };
-                        var tokens = sf.GetTokensFromOffset(Range.Worksheet.Name, fs.Row - sf.StartRow, fs.Column- sf.StartCol);
                     }
                     else
                     {
+                        var s = fs.Value.ToString();
+                        if (string.IsNullOrEmpty(s)) continue;
                         f = new FormulaCell() 
                         { 
                             ws = ws, 
                             wsIndex = ws.IndexInList, 
                             Row = fs.Row, 
                             Column = fs.Column,
-                            Formula = fs.Value.ToString()
-                        };                        
-                    }
-                    if (!string.IsNullOrEmpty(f.Formula))
-                    {
-                        f.Tokens = lexer.Tokenize(f.Formula, Range.Worksheet.Name).ToList();
+                            Formula = s,
+                            Tokens = lexer.Tokenize(s, Range.Worksheet.Name).ToList()
+                        };
                         ws._formulaTokens.SetValue(fs.Row, fs.Column, f.Tokens);
-                        depChain.Add(f);
-                        FollowChain(depChain, lexer, ws.Workbook, ws, f, options);
                     }
+                    depChain.Add(f);
+                    FollowChain(depChain, lexer, ws.Workbook, ws, f, options);
                 }
             }
         }
@@ -173,6 +174,10 @@ namespace OfficeOpenXml.FormulaParsing
         private static void FollowChain(DependencyChain depChain, ILexer lexer, ExcelWorkbook wb, ExcelWorksheet ws, FormulaCell f, ExcelCalculationOption options)
         {
             Stack<FormulaCell> stack = new Stack<FormulaCell>();
+            if (f.ShIndex > 0)
+            {
+                f.Tokens = ws._sharedFormulas[f.ShIndex].GetTokensFromOffset(f.ws.Name, f.Row, f.Column).ToList();
+            }
         iterateToken:
             while (f.tokenIx < f.Tokens.Count)
             {

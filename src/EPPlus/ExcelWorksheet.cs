@@ -98,7 +98,7 @@ namespace OfficeOpenXml
                     var tokens = _tokenizer.Tokenize(Formula, currentWs).ToList();
                     _tokenOffsetCollection = new TokenOffsetCollection(currentWs, tokens); 
                 }
-                _tokenOffsetCollection.SetOffset(row, column);
+                _tokenOffsetCollection.SetOffset(row - StartRow, column-StartCol);
                 return _tokenOffsetCollection;
             }
             
