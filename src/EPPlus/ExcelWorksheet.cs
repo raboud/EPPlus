@@ -72,8 +72,8 @@ namespace OfficeOpenXml
             internal string Address { get; set; }
             internal bool IsArray { get; set; }
             string _formula = "";
-            public string Formula 
-            { 
+            public string Formula
+            {
                 get
                 {
                     return _formula;
@@ -90,13 +90,26 @@ namespace OfficeOpenXml
             public int StartRow { get; set; }
             public int StartCol { get; set; }
 
-            internal IEnumerable<Token> Tokens { get; set; }
+            internal List<Token> Tokens { get; set; }
 
+            internal IEnumerable<Token> GetTokensFromOffset(string currentWs, int row, int column)
+            {
+                if (_tokenOffsetCollection == null)
+                {
+                    var tokens = _tokenizer.Tokenize(Formula, currentWs).ToList();
+                    _tokenOffsetCollection = new TokenOffsetCollection(currentWs, tokens);
+                }
+                _tokenOffsetCollection.SetOffset(row - StartRow, column - StartCol);
+                return _tokenOffsetCollection;
+            }
+
+
+            private TokenOffsetCollection _tokenOffsetCollection;
             internal void SetTokens(string worksheet)
             {
                 if (Tokens == null)
                 {
-                    Tokens = _tokenizer.Tokenize(Formula, worksheet);
+                    Tokens = _tokenizer.Tokenize(Formula, worksheet).ToList();
                 }
             }
             internal string GetFormula(int row, int column, string worksheet)
@@ -119,7 +132,7 @@ namespace OfficeOpenXml
                             {
                                 f += token.Value;
                             }
-                            else    
+                            else
                             {
                                 f += a.GetOffset(0, column - StartCol, true);
                             }
@@ -142,9 +155,9 @@ namespace OfficeOpenXml
                     }
                     else
                     {
-                        if(token.TokenTypeIsSet(TokenType.StringContent))
+                        if (token.TokenTypeIsSet(TokenType.StringContent))
                         {
-                            f += token.Value.Replace("\"", "\"\"");
+                            f += "\"" + token.Value.Replace("\"", "\"\"") + "\"";
                         }
                         else
                         {

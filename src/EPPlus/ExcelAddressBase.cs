@@ -1160,7 +1160,7 @@ namespace OfficeOpenXml
             }
         }
 
-        private static bool IsR1C1(string address)
+        internal static bool IsR1C1(string address)
         {
             var start = address.LastIndexOf("!", address.Length-1, StringComparison.OrdinalIgnoreCase);
             if (start>=0)
