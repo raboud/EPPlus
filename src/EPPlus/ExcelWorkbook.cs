@@ -1732,7 +1732,6 @@ namespace OfficeOpenXml
 				_slicerCaches.Add(cache.Name, cache);
 			}
 		}
-
 		internal ExcelTable GetTable(int tableId)
         {
             foreach(var ws in Worksheets)
@@ -1745,5 +1744,16 @@ namespace OfficeOpenXml
             }
 			return null;
         }
-    } // end Workbook
+		internal ExcelTable GetTable(string tableName)
+		{
+			foreach (var ws in Worksheets)
+			{
+				if(ws.Tables._tableNames.ContainsKey(tableName))
+                {
+					return ws.Tables[tableName];
+				}
+			}
+			return null;
+		}
+	} // end Workbook
 }

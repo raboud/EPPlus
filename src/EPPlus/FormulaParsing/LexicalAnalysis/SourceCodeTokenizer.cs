@@ -46,15 +46,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         private readonly ITokenFactory _tokenFactory;
         private readonly INameValueProvider _nameValueProvider;
 
-        public IEnumerable<Token> Tokenize(string input)
+        public IList<Token> Tokenize(string input)
         {
             return Tokenize(input, null);
         }
-        public IEnumerable<Token> Tokenize(string input, string worksheet)
+        public IList<Token> Tokenize(string input, string worksheet)
         {
             if (string.IsNullOrEmpty(input))
             {
-                return Enumerable.Empty<Token>();
+                return new List<Token>();
             }
             // MA 1401: Ignore leading plus in formula.
             input = input.TrimStart('+');

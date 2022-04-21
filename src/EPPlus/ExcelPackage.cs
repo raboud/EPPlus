@@ -642,7 +642,7 @@ namespace OfficeOpenXml
                     _licenseSet = true;
                     return true;
                 }
-                var v = Environment.GetEnvironmentVariable("EPPlusLicenseContext",EnvironmentVariableTarget.User);
+                var v = Environment.GetEnvironmentVariable("EPPlusLicenseContext", EnvironmentVariableTarget.User);
                 if(string.IsNullOrEmpty(v))
                 {
                     v = Environment.GetEnvironmentVariable("EPPlusLicenseContext", EnvironmentVariableTarget.Process);
@@ -655,7 +655,7 @@ namespace OfficeOpenXml
                         .SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("appsettings.json", true, false);
                     var c = build.Build();
-
+                        
                     v = c["EPPlus:ExcelPackage:LicenseContext"];
 
 #else

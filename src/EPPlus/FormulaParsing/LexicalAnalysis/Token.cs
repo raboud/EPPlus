@@ -22,6 +22,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
     /// </summary>
     public struct Token
     {
+        const ushort IS_NEGATED=0x0001;
         /// <summary>
         /// Constructor
         /// </summary>
@@ -42,7 +43,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         {
             Value = token;
             TokenType = tokenType;
-            IsNegated = isNegated;
+            _flags = (ushort)(isNegated ? IS_NEGATED : 0);
         }
 
         /// <summary>
@@ -51,11 +52,17 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         public string Value;
 
         internal TokenType TokenType;
-
+        internal ushort _flags;
         /// <summary>
         /// Indicates whether a numeric value should be negated when compiled
         /// </summary>
-        public bool IsNegated;
+        public bool IsNegated 
+        { 
+            get
+            {
+                return (_flags & IS_NEGATED) > 0;
+            }
+        }
 
         /// <summary>
         /// Operator ==

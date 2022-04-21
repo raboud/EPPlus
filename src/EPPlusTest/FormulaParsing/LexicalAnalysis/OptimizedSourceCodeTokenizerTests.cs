@@ -176,8 +176,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = "'A-B'!A1";
             var tokens = _tokenizer.Tokenize(input);
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens.ElementAt(0).TokenTypeIsSet(TokenType.ExcelAddress));
+            Assert.AreEqual(3, tokens.Count);
+            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.ExcelAddress));
         }
         [TestMethod]
         public void OffsetInAddressTokensFirst()
@@ -400,8 +400,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = @"sheetname!name";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.NameValue));
+            Assert.AreEqual(3, tokens.Count());
+            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.NameValue));
         }
 
         [TestMethod]
@@ -409,16 +409,16 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = @"'sheetname'!name";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.NameValue));
+            Assert.AreEqual(3, tokens.Count());
+            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.NameValue));
         }
         [TestMethod]
         public void TokenizeExternalWorksheetName()
         {
             var input = @"[0]sheetname!name";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.NameValue));
+            Assert.AreEqual(6, tokens.Count());
+            Assert.IsTrue(tokens[5].TokenTypeIsSet(TokenType.NameValue));
         }
 
         [TestMethod]
@@ -426,32 +426,32 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = @"[3]'sheetname'!name";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.NameValue));
+            Assert.AreEqual(6, tokens.Count());
+            Assert.IsTrue(tokens[5].TokenTypeIsSet(TokenType.NameValue));
         }
         [TestMethod]
         public void TokenizeExternalWorkbookName()
         {
             var input = @"[0]!name";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.NameValue));
+            Assert.AreEqual(5, tokens.Count());
+            Assert.IsTrue(tokens[4].TokenTypeIsSet(TokenType.NameValue));
         }
         [TestMethod]
         public void TokenizeExternalWorkbookInvalidRef()
         {
             var input = @"[0]#Ref!";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.InvalidReference));
+            Assert.AreEqual(4, tokens.Count());
+            Assert.IsTrue(tokens[3].TokenTypeIsSet(TokenType.InvalidReference));
         }
         [TestMethod]
         public void TokenizeExternalWorksheetInvalidRef()
         {
             var input = @"[0]Sheet1!#Ref!";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
-            Assert.IsTrue(tokens[0].TokenTypeIsSet(TokenType.InvalidReference));
+            Assert.AreEqual(6, tokens.Count());
+            Assert.IsTrue(tokens[5].TokenTypeIsSet(TokenType.InvalidReference));
         }
 
         [TestMethod]
@@ -459,16 +459,37 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             var input = @"=VLOOKUP(J7;'Sheet 1''21'!$Q$4:$R$28;2;0)";
             var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(11, tokens.Count());
-            Assert.IsTrue(tokens[5].TokenTypeIsSet(TokenType.ExcelAddress));
-            Assert.AreEqual("'Sheet 1''21'!$Q$4:$R$28", tokens[5].Value);
+            Assert.AreEqual(15, tokens.Count());
+            Assert.IsTrue(tokens[3].TokenTypeIsSet(TokenType.ExcelAddress));
+            Assert.IsTrue(tokens[7].TokenTypeIsSet(TokenType.ExcelAddress));
+            Assert.IsTrue(tokens[9].TokenTypeIsSet(TokenType.ExcelAddress));
         }
         [TestMethod]
         public void TokenizeWorksheetAddress()
         {
-            var input = @"='Sheet1'!A1:Name2";
-            var tokens = _tokenizer.Tokenize(input).ToArray();
-            Assert.AreEqual(1, tokens.Count());
+            var input = @"='Sheet''1'!A1:Name2";
+            var tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(6, tokens.Count);
+        }
+        [TestMethod]
+        public void TokenizeTableAddress()
+        {
+            for (int i = 0; i < 100000; i++)
+            {
+                var input = @"SUM(MyDataTable[[#This Row],[Column 1]])";
+                var tokens = _tokenizer.Tokenize(input);
+                Assert.AreEqual(13, tokens.Count);
+                Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.TableName));
+            }
+        }
+        [TestMethod]
+        public void TokenizeTableAddressPerformance()
+        {
+            var input = @"SUM(MyDataTable[[#This Row],[Column 1]])";
+            for (int i = 0; i < 100000; i++)
+            {
+                var tokens = _tokenizer.Tokenize(input);
+            }
         }
     }
 }

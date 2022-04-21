@@ -52,7 +52,7 @@ namespace OfficeOpenXml.Table
             LoadXmlSafe(TableXml, Part.GetStream());
             Init();
             Address = new ExcelAddressBase(GetXmlNodeString("@ref"));
-            _tableStyle = GetTableStyle(StyleName);            
+            _tableStyle = GetTableStyle(StyleName);
         }
         internal ExcelTable(ExcelWorksheet sheet, ExcelAddressBase address, string name, int tblId) : 
             base(sheet.NameSpaceManager)
@@ -615,7 +615,6 @@ namespace OfficeOpenXml.Table
                 _autoFilter = new ExcelAutoFilter(NameSpaceManager, node, this);
                 _autoFilter.Address = AutoFilterAddress;
             }
-
         }
 
         /// <summary>

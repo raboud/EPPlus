@@ -148,8 +148,24 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         /// </summary>
         RangeOffset = 1 << 30,
         /// <summary>
-        /// White space or Intersect operator
+        /// White space - Intersect operator will be set a operatar with the value " "
         /// </summary>
-        WhiteSpace = (ulong)1 << 31
+        WhiteSpace = (ulong)1 << 31,
+        /// <summary>
+        /// Represents an external reference
+        /// </summary>
+        ExternalReference =(ulong)1 << 32,
+        /// <summary>
+        /// Refrence a table name in an address
+        /// </summary>
+        TableName = (ulong)1 << 33,
+        /// <summary>
+        /// Represents a table part in an address, for example "#this row"
+        /// </summary>
+        TablePart = (ulong)1 << 34,
+        /// <summary>
+        /// Represents a table column name in an address.
+        /// </summary>
+        TableColumn = (ulong)1 << 35,        
     }
 }

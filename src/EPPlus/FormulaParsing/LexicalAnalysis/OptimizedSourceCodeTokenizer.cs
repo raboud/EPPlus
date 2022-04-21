@@ -12,9 +12,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         {
             {'!', new Token("!", TokenType.ExcelAddress)},
             {'$', new Token("$", TokenType.ExcelAddress)},
-            {'[', new Token("[", TokenType.OpeningBracket)},
-            {']', new Token("]", TokenType.ClosingBracket)},
-            {':', new Token(":", TokenType.Colon) },
         };
         private static readonly Dictionary<char, Token> _charTokens = new Dictionary<char, Token>
         {
@@ -35,7 +32,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             {',', new Token(",", TokenType.Comma)},
             {';', new Token(";", TokenType.SemiColon) },
             {'%', new Token("%", TokenType.Percent) },
-            {' ', new Token(" ", TokenType.WhiteSpace) }
+            {' ', new Token(" ", TokenType.WhiteSpace) },
+            {'!', new Token("!", TokenType.WorksheetName) },
+            {':', new Token(":", TokenType.Colon)},
+            {'[', new Token("[", TokenType.OpeningBracket)},
+            {']', new Token("]", TokenType.ClosingBracket)}
         };
         private static readonly Dictionary<string, Token> _stringTokens = new Dictionary<string, Token>
         {
@@ -43,7 +44,14 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             {"<=", new Token("<=", TokenType.Operator)},
             {"<>", new Token("<>", TokenType.Operator)},
         };
-
+        private static readonly HashSet<string> _tableParts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            {"#all" },
+            {"#this row"},
+            {"#headers" },
+            {"#data" },
+            {"#totals" }
+        };
         private bool _r1c1;
         public static ISourceCodeTokenizer Default
         {
@@ -65,7 +73,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 
         private readonly ITokenFactory _tokenFactory;
 
-        public IEnumerable<Token> Tokenize(string input)
+        /// <summary>
+        /// Split the input string into tokens used by the formula parser
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public IList<Token> Tokenize(string input)
         {
             return Tokenize(input, null);
         }
@@ -80,9 +93,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
            isDecimal = 0x20,
            isPercent = 0x40,
            isNegator = 0x80,
-           isColon =   0x100
+           isColon =   0x100,
+           isTableRef= 0x200,
+           isExtRef =  0x400
         }
-        public IEnumerable<Token> Tokenize(string input, string worksheet)
+        public IList<Token> Tokenize(string input, string worksheet)
         {
             var l = new List<Token>();
             int ix;
@@ -98,9 +113,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
 
             statFlags flags = 0;
-
-
-
             short isInString = 0;
             short bracketCount = 0, paranthesesCount=0;
             var current =new StringBuilder();
@@ -124,27 +136,44 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 else if (c == '\'' && isInString !=1)
                 {
                     current.Append(c);
-                    flags |= statFlags.isAddress;
                     isInString ^= 2;
-                }
-                else if(c=='[' && isInString == 0)
-                {
-                    current.Append(c);
-                    flags |= statFlags.isAddress;
-                    bracketCount++;
-                }
-                else if (c == ']' && isInString == 0)
-                {
-                    current.Append(c);
-                    bracketCount--;
                 }
                 else
                 { 
-                    if(isInString==0 && bracketCount == 0 && _charTokens.ContainsKey(c))
+                    if(isInString==0 && _charTokens.ContainsKey(c))
                     {
                         if (c == ' ') //white space, we ignore for now. Implement intersect operation handling here.
                         {
-
+                            if(bracketCount > 0) //Within brackets, within Table address or external reference, just append to current token
+                            {
+                                current.Append(c);
+                            }
+                        }
+                        else if(c=='!' && current.Length > 0 && current[0]=='#')
+                        {
+                            var currentString=current.ToString(); 
+                            if (currentString.Equals("#NUM", StringComparison.OrdinalIgnoreCase))
+                            {
+                                l.Add(new Token("#NUM!", TokenType.NumericError));
+                            }
+                            else if (currentString.Equals("#VALUE", StringComparison.OrdinalIgnoreCase))
+                            {
+                                l.Add(new Token("#VALUE!", TokenType.ValueDataTypeError));
+                            }
+                            else if (currentString.Equals("#NULL", StringComparison.OrdinalIgnoreCase))
+                            {
+                                l.Add(new Token("#NULL!", TokenType.Null));
+                            }
+                            else
+                            {
+                                l.Add(new Token("#REF!", TokenType.InvalidReference));
+                            }
+                            flags &= statFlags.isTableRef;
+#if (NET35)
+                            current=new StringBuilder();
+#else
+                            current.Clear();
+#endif
                         }
                         else
                         {
@@ -153,7 +182,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             {
                                 flags |= statFlags.isNegator;
                             }
-                            else if(c=='+' && l.Count>0) //remove leading + and add + operator.
+                            else if (c == '[')
+                            {
+                                if ((flags & statFlags.isTableRef) != statFlags.isTableRef)
+                                {
+                                    flags |= statFlags.isExtRef;
+                                }
+                                l.Add(_charTokens[c]);
+                            }
+                            else if (c=='+' && l.Count>0) //remove leading + and add + operator.
                             {
                                 var pt = l[l.Count - 1];
 
@@ -189,6 +226,18 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             else if(c==')')
                             {
                                 paranthesesCount--;
+                            }
+                            else if (c == '[')
+                            {
+                                bracketCount++;
+                            }
+                            else if (c == ']')
+                            {
+                                bracketCount--;
+                                if(bracketCount==0)
+                                {
+                                    flags = 0;
+                                }
                             }
                         }
                     }
@@ -236,7 +285,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 ix++;
                 pc = c;
             }
-            HandleToken(l, pc, current, ref flags);
+            if(current.Length > 0) HandleToken(l, pc, current, ref flags);
             if (isInString != 0)
             {
                 throw new FormatException("Unterminated string");
@@ -298,7 +347,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                         ||
                         pt.TokenType == TokenType.Comma
                         ||
-                        pt.TokenType == TokenType.SemiColon
+                     pt.TokenType == TokenType.SemiColon
                         ||
                         pt.TokenType == TokenType.OpeningEnumerable)
                     {
@@ -316,13 +365,39 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 {
                     l.Add(new Token("", TokenType.StringContent));
                 }
-                flags = 0;
+                
+                flags &= statFlags.isTableRef;
                 return;
             }
             var currentString = current.ToString();
             if ((flags & statFlags.isString) == statFlags.isString)
             {
                 l.Add(new Token(currentString, TokenType.StringContent));
+            }
+            else if (c == '!')
+            {
+                l.Add(new Token(currentString, TokenType.WorksheetNameContent));
+            }
+            else if (c == ']')
+            {
+                if(l.Count==0 || (flags & statFlags.isExtRef)== statFlags.isExtRef)
+                {
+                    l.Add(new Token(currentString, TokenType.ExternalReference));
+                }
+                else
+                {
+                    if((flags & statFlags.isTableRef) == statFlags.isTableRef)
+                    { 
+                        if(_tableParts.Contains(currentString))
+                        {
+                            l.Add(new Token(currentString, TokenType.TablePart));
+                        }
+                        else
+                        {
+                            l.Add(new Token(currentString, TokenType.TableColumn));
+                        }
+                    }
+                }
             }
             else if (c == '(')
             {
@@ -337,46 +412,27 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }            
             else if ((flags & statFlags.isAddress) == statFlags.isAddress)
             {
-                if (currentString.EndsWith("#REF!", StringComparison.OrdinalIgnoreCase))
+                if (_r1c1 == true)
                 {
-                    l.Add(new Token(currentString, TokenType.InvalidReference));
-                }
-                else if (currentString.EndsWith("#NUM!", StringComparison.OrdinalIgnoreCase))
-                {
-                    l.Add(new Token(currentString, TokenType.NumericError));
-                }
-                else if (currentString.EndsWith("#VALUE!", StringComparison.OrdinalIgnoreCase))
-                {
-                    l.Add(new Token(currentString, TokenType.ValueDataTypeError));
-                }
-                else if (currentString.EndsWith("#NULL!", StringComparison.OrdinalIgnoreCase))
-                {
-                    l.Add(new Token(currentString, TokenType.Null));
-                }
-                else
-                {
-                    if (_r1c1 == true)
+                    if (ExcelAddressBase.IsR1C1(currentString))
                     {
-                        if (ExcelAddressBase.IsR1C1(currentString))
-                        {
-                            l.Add(new Token(currentString, TokenType.ExcelAddressR1C1));
-                        }
-                        else
-                        {
-                            l.Add(new Token(currentString, TokenType.NameValue));
-                        }
-
+                        l.Add(new Token(currentString, TokenType.ExcelAddressR1C1));
                     }
                     else
                     {
-                        if (IsName(currentString))
-                        {
-                            l.Add(new Token(currentString, TokenType.NameValue));
-                        }
-                        else
-                        {
-                            l.Add(new Token(currentString, TokenType.ExcelAddress));
-                        }
+                        l.Add(new Token(currentString, TokenType.NameValue));
+                    }
+
+                }
+                else
+                {
+                    if (IsName(currentString))
+                    {
+                        l.Add(new Token(currentString, TokenType.NameValue));
+                    }
+                    else
+                    {
+                        l.Add(new Token(currentString, TokenType.ExcelAddress));
                     }
                 }
             }
@@ -411,7 +467,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
                 else
                 {
-                    l.Add(new Token(currentString, TokenType.NameValue));
+                    if(c=='[')
+                    {
+                        l.Add(new Token(currentString, TokenType.TableName));
+                        flags |= statFlags.isTableRef;
+                    }
+                    else
+                    {
+                        l.Add(new Token(currentString, TokenType.NameValue));
+                    }
                 }
             }
             else
@@ -429,12 +493,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     l.Add(new Token(currentString, TokenType.Integer));
                 }
             }
-            flags = 0;
+            flags &= statFlags.isTableRef;
             //Clear sb
 #if (NET35)
     current=new StringBuilder();
 #else
-            current.Clear();
+    current.Clear();
 #endif
             
         }
