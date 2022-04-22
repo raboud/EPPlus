@@ -191,7 +191,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             }
                             else if (c=='+' && l.Count>0) //remove leading + and add + operator.
                             {
-                                var pt = l[l.Count - 1];
+                                var pt = GetLastToken(l);
 
                                 //Remove prefixing +
                                 if (!(pt.TokenType==TokenType.Operator
@@ -297,7 +297,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     }
                 }
                 ix++;
-                pc = c;
+                if(c != ' ') pc = c;
             }
             if (current.Length > 0)
             {
@@ -318,6 +318,14 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
 
             return l;
+        }
+
+        private Token GetLastToken(List<Token> l)
+        {
+            var i = l.Count - 1;
+            while (i >= 0 && l[i].TokenType == TokenType.WhiteSpace) 
+                i--;
+            return l[i];
         }
 
         private static void HandleIntersectOperator(List<Token> l)
@@ -377,7 +385,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
                 else
                 {
-                    var pt = l[l.Count - 1];
+                    var pt = GetLastToken(l);
                     if((pt.TokenTypeIsSet(TokenType.Operator) && pt.Value == "+"))  //Replace + by -
                     {
                         l[l.Count - 1] = _charTokens['-'];

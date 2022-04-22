@@ -71,8 +71,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "1 + -1";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(3, tokens.Count());
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.Operator));
+            Assert.AreEqual(5, tokens.Count());
+            Assert.IsTrue(tokens.ElementAt(2).TokenTypeIsSet(TokenType.Operator));
             Assert.AreEqual("-", tokens.ElementAt(1).Value);
         }
 
@@ -82,8 +82,8 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "1 + (-1 * 2)";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(8, tokens.Count());
-            Assert.IsTrue(tokens.ElementAt(3).TokenTypeIsSet(TokenType.Negator));
+            Assert.AreEqual(12, tokens.Count);
+            Assert.IsTrue(tokens[5].TokenTypeIsSet(TokenType.Negator));
         }
 
         [TestMethod]
@@ -92,9 +92,9 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "Ceiling(-1, -0.1)";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(8, tokens.Count());
-            Assert.IsTrue(tokens.ElementAt(2).TokenTypeIsSet(TokenType.Negator));
-            Assert.IsTrue(tokens.ElementAt(5).TokenTypeIsSet(TokenType.Negator), "Negator after comma was not identified");
+            Assert.AreEqual(9, tokens.Count());
+            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.Negator));
+            Assert.IsTrue(tokens[6].TokenTypeIsSet(TokenType.Negator), "Negator after comma was not identified");
         }
 
         [TestMethod]
