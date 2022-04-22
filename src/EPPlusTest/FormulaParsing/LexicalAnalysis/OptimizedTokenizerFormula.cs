@@ -24,6 +24,16 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
 
         }
         [TestMethod]
+        public void VerifyFormulaTokensTable_Performance()
+        {
+            var r = _ws.Cells["A4:A105"];
+            for (int i = 0; i < 1000000; i++)
+            {
+                var f = @"SUM(MyTable[[#This Row],[Date]])";
+                var formula = new Formula(r, f);
+            }
+        }
+        [TestMethod]
         public void VerifyFormulaTokensTable_ThisRowOneColumn()
         {
             var f = @"SUM(MyTable[[#This Row],[Date]])";
@@ -371,6 +381,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             Assert.IsInstanceOfType(formula.TokenInfos[0], typeof(FormulaNamedFormula));
 
             var fv = (FormulaNamedFormula)formula.TokenInfos[0];
+            
             Assert.IsFalse(fv.IsFixed); 
             Assert.AreEqual(expectedFormula, fv.Formula);
         }

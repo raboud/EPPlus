@@ -101,9 +101,9 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "1 <= 2";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(3, tokens.Count());
-            Assert.AreEqual("<=", tokens.ElementAt(1).Value);
-            Assert.IsTrue(tokens.ElementAt(1).TokenTypeIsSet(TokenType.Operator));
+            Assert.AreEqual(5, tokens.Count);
+            Assert.AreEqual("<=", tokens.ElementAt(2).Value);
+            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.Operator));
         }
 
         [TestMethod]
@@ -490,6 +490,33 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             {
                 var tokens = _tokenizer.Tokenize(input);
             }
+        }
+        [TestMethod]
+        public void TokenizeWhiteSpace()
+        {
+            var input = @"A1:B3  B2:C5";
+            var tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[3].TokenType);
+            Assert.AreEqual(7, tokens.Count);
+            
+            input = "=( A1:B3 )   (B2:C3)";
+            tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(14, tokens.Count);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[2].TokenType);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[6].TokenType);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[8].TokenType);
+            Assert.AreEqual("   ", tokens[8].Value);
+
+            input = "=( A1:B3 )( B2:C3  )  ";
+            tokens = _tokenizer.Tokenize( input);
+            Assert.AreEqual(16, tokens.Count);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[2].TokenType);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[6].TokenType);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[9].TokenType);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[13].TokenType);
+            Assert.AreEqual("  ", tokens[13].Value);
+            Assert.AreEqual(TokenType.WhiteSpace, tokens[15].TokenType);
+            Assert.AreEqual("  ", tokens[15].Value);
         }
     }
 }

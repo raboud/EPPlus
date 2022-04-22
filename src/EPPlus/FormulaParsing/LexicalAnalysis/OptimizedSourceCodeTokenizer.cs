@@ -142,14 +142,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 { 
                     if(isInString==0 && _charTokens.ContainsKey(c))
                     {
-                        if (c == ' ') //white space, we ignore for now. Implement intersect operation handling here.
-                        {
-                            if(bracketCount > 0) //Within brackets, within Table address or external reference, just append to current token
-                            {
-                                current.Append(c);
-                            }
-                        }
-                        else if(c=='!' && current.Length > 0 && current[0]=='#')
+                        if(c=='!' && current.Length > 0 && current[0]=='#')
                         {
                             var currentString=current.ToString(); 
                             if (currentString.Equals("#NUM", StringComparison.OrdinalIgnoreCase))
@@ -175,9 +168,15 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             current.Clear();
 #endif
                         }
+                        else if (c==' ' && bracketCount>0)
+                        {
+                            current.Append(c);
+                        }
                         else
                         {
+
                             HandleToken(l, c, current, ref flags);
+
                             if (c == '-')
                             {
                                 flags |= statFlags.isNegator;
@@ -217,9 +216,24 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             }
                             else
                             {
-                                l.Add(_charTokens[c]);
+                                if(c==' ')
+                                {
+                                    short wsCnt = 1;
+                                    int wsIx = ix + 1;
+                                    while(wsIx < input.Length && input[wsIx++]==' ')
+                                    {
+                                        wsCnt++;
+                                    }
+                                    l.Add(new Token(new string(c, wsCnt), TokenType.WhiteSpace));
+                                    ix = wsIx >= input.Length && input[input.Length - 1] == ' ' ? wsIx - 1 : wsIx - 2;
+                                }
+                                else
+                                {
+                                    l.Add(_charTokens[c]);
+                                }
                             }
-                            if(c=='(')
+
+                            if (c=='(')
                             {
                                 paranthesesCount++;
                             }
@@ -285,7 +299,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 ix++;
                 pc = c;
             }
-            if(current.Length > 0) HandleToken(l, pc, current, ref flags);
+            if (current.Length > 0)
+            {
+                HandleToken(l, pc, current, ref flags);
+            }
+
             if (isInString != 0)
             {
                 throw new FormatException("Unterminated string");
@@ -300,6 +318,31 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
 
             return l;
+        }
+
+        private static void HandleIntersectOperator(List<Token> l)
+        {
+            var pt = l[l.Count - 3];
+            var t = l[l.Count - 1];
+            if ((pt.TokenType == TokenType.ExcelAddress ||
+               pt.TokenType == TokenType.ExcelAddressR1C1 ||
+               pt.TokenType == TokenType.NameValue ||
+               pt.TokenType == TokenType.ClosingParenthesis ||
+               pt.TokenType == TokenType.ClosingBracket)
+               &&
+               (t.TokenType == TokenType.ExcelAddress ||
+               t.TokenType == TokenType.ExcelAddressR1C1 ||
+               t.TokenType == TokenType.NameValue ||
+               t.TokenType == TokenType.OpeningParenthesis ||
+               t.TokenType == TokenType.OpeningBracket))
+            {
+                var wsp = l[l.Count - 2].Value;
+                l[l.Count - 2] = new Token(" ", TokenType.Operator);
+                if (wsp.Length > 1)
+                {
+                    l.Insert(l.Count - 1, new Token(wsp.Substring(1), TokenType.WhiteSpace));
+                }
+            }
         }
 
         private void SetRangeOffsetToken(List<Token> l)
@@ -422,7 +465,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                     {
                         l.Add(new Token(currentString, TokenType.NameValue));
                     }
-
                 }
                 else
                 {
@@ -494,13 +536,13 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 }
             }
             flags &= statFlags.isTableRef;
+            
             //Clear sb
-#if (NET35)
+#if(NET35)
     current=new StringBuilder();
 #else
     current.Clear();
 #endif
-            
         }
     private static readonly char[] _addressChars = new char[]{':','$', '[', ']', '\''};
     private static bool IsName(string s)

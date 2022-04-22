@@ -8,11 +8,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
     {
         ExcelWorksheet _ws;
         ExcelRangeBase _range;
+        internal static ISourceCodeTokenizer _tokenizer= OptimizedSourceCodeTokenizer.Default;
         public Formula(ExcelRangeBase range, string formula)
         {            
             _range = range;
             _ws = range.Worksheet;
-            Tokens = OptimizedSourceCodeTokenizer.Default.Tokenize(formula);
+            Tokens = _tokenizer.Tokenize(formula);
             SetTokenInfos();
         
         }
