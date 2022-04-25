@@ -33,6 +33,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Operators
             Add("<=", Operator.LessThanOrEqual);
             Add("<>", Operator.NotEqualsTo);
             Add("&", Operator.Concat);
+            Add(":", Operator.Colon);
         }
 
         private static IDictionary<string, IOperator> _instance;

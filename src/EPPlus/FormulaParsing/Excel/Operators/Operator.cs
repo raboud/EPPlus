@@ -23,6 +23,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Operators
 {
     public class Operator : IOperator
     {
+        private const int PrecedenceColon = 0;
         private const int PrecedencePercent = 2;
         private const int PrecedenceExp = 4;
         private const int PrecedenceMultiplyDevide = 6;
@@ -223,6 +224,21 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Operators
                         var rStr = r.Result != null ? CompileResultToString(r) : string.Empty;
                         return new CompileResult(string.Concat(lStr, rStr), DataType.String);
                     });
+            }
+        }
+
+        public static IOperator Colon
+        {
+            get
+            {
+                return new Operator(Operators.Colon, PrecedenceColon, (l, r) =>
+                {
+                    l = l ?? new CompileResult(string.Empty, DataType.String);
+                    r = r ?? new CompileResult(string.Empty, DataType.String);
+                    var lStr = l.Result != null ? CompileResultToString(l) : string.Empty;
+                    var rStr = r.Result != null ? CompileResultToString(r) : string.Empty;
+                    return new CompileResult(string.Concat(lStr, rStr), DataType.String);
+                });
             }
         }
 

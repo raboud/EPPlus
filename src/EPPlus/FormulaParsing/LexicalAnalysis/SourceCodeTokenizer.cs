@@ -32,6 +32,10 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
         }
 
+        public static ISourceCodeTokenizer Optimized
+        {
+            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
+        }
 
         public SourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
             : this(new TokenFactory(functionRepository, nameValueProvider, r1c1))

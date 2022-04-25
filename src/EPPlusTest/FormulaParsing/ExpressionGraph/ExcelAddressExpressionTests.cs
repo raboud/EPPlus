@@ -35,6 +35,7 @@ using OfficeOpenXml.FormulaParsing;
 using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using FakeItEasy;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 
 namespace EPPlusTest.FormulaParsing.ExpressionGraph
 {
@@ -105,6 +106,16 @@ namespace EPPlusTest.FormulaParsing.ExpressionGraph
         //    Assert.AreEqual(expectedAddress, result.Result);
 
         //}
+
+        #region New token types
+
+        [TestMethod, Ignore]
+        public void ShouldCompilAddressUsingColonOperator1()
+        {
+            var formula = "SUM(A1:B2)";
+            var tokens = SourceCodeTokenizer.Optimized.Tokenize(formula);
+        }
+        #endregion
 
         #region Compile Tests
         [TestMethod]

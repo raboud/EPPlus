@@ -59,6 +59,14 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
         /// </summary>
         ExcelAddress,
         /// <summary>
+        /// Single cell address, e.g A1
+        /// </summary>
+        ExcelCellAddress,
+        /// <summary>
+        /// An address range, e.g A1:B2
+        /// </summary>
+        ExcelRange,
+        /// <summary>
         /// An error code
         /// </summary>
         ExcelError,
