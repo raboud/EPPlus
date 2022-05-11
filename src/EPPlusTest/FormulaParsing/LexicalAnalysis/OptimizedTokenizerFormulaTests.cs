@@ -30,14 +30,14 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             for (int i = 0; i < 1000000; i++)
             {
                 var f = @"SUM(MyTable[[#This Row],[Date]])";
-                var formula = new Formula(r, f);
+                var formula = new SharedFormula(r, f);
             }
         }
         [TestMethod]
         public void VerifyFormulaTokensTable_ThisRowOneColumn()
         {
             var f = @"SUM(MyTable[[#This Row],[Date]])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
             
             Assert.AreEqual(13, formula.Tokens.Count);
             Assert.AreEqual(1, formula.TokenInfos.Count);
@@ -73,7 +73,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         public void VerifyFormulaTokensTable_AllOneColumn()
         {
             var f = @"SUM(MyTable[[#all],[Date]])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             Assert.AreEqual(13, formula.Tokens.Count);
             Assert.AreEqual(1, formula.TokenInfos.Count);
@@ -95,7 +95,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         public void VerifyFormulaTokensTable_AllSpanColumns()
         {
             var f = @"SUM(MyTable[[#all],[Date]:[StrValue]])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             Assert.AreEqual(17, formula.Tokens.Count);
             Assert.AreEqual(1, formula.TokenInfos.Count);
@@ -117,7 +117,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         public void VerifyFormulaTokensTable_HeaderDataLastColumn()
         {
             var f = @"SUM(MyTable[[#headers],[#data],[NumFormattedValue]])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             Assert.AreEqual(17, formula.Tokens.Count);
             Assert.AreEqual(1, formula.TokenInfos.Count);
@@ -141,7 +141,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM(MyTable[#totals])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
             
             //Assert
             Assert.AreEqual(7, formula.Tokens.Count);
@@ -165,7 +165,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             //Setup
             _ws.Tables[0].ShowTotal = true;
             var f = @"SUM(MyTable[#totals])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             //Assert
             Assert.AreEqual(7, formula.Tokens.Count);
@@ -190,7 +190,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM(MyTable[])";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             //Assert
             Assert.AreEqual(6, formula.Tokens.Count);
@@ -212,7 +212,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM(MyTable)";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             //Assert
             Assert.AreEqual(4, formula.Tokens.Count);
@@ -234,7 +234,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM($A$1:$C$5)";
-            var formula = new Formula(_ws.Cells["A4:A105"], f);
+            var formula = new SharedFormula(_ws.Cells["A4:A105"], f);
 
             //Assert
             Assert.AreEqual(6, formula.Tokens.Count);
@@ -266,7 +266,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM(A$1:C5)";
-            var formula = new Formula(_ws.Cells["D4:E12"], f);
+            var formula = new SharedFormula(_ws.Cells["D4:E12"], f);
 
             //Assert
             Assert.AreEqual(6, formula.Tokens.Count);
@@ -308,7 +308,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         {
             //Setup
             var f = @"SUM($A1:C$5)";
-            var formula = new Formula(_ws.Cells["D4:E12"], f);
+            var formula = new SharedFormula(_ws.Cells["D4:E12"], f);
 
             //Assert
             Assert.AreEqual(6, formula.Tokens.Count);
@@ -351,7 +351,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             //Setup
             _ws.Workbook.Names.AddValue("NameValue", 73);
             var f = @"=NameValue";
-            var formula = new Formula(_ws.Cells["D4:E12"], f);
+            var formula = new SharedFormula(_ws.Cells["D4:E12"], f);
 
             //Assert
             Assert.AreEqual(2, formula.Tokens.Count);
@@ -371,7 +371,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var expectedFormula = "A1+B1";
             _ws.Workbook.Names.AddFormula("NameFormula", expectedFormula);
             var f = @"NameFormula";
-            var formula = new Formula(_ws.Cells["D4:E12"], f);
+            var formula = new SharedFormula(_ws.Cells["D4:E12"], f);
 
             //Assert
             Assert.AreEqual(1, formula.Tokens.Count);
@@ -389,9 +389,9 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
         public void TokenizeLongFormula()
         {
             var f="IF(ISNUMBER(MATCH(AG5,uswPerils,0)),\"USW\",IF(ISNUMBER(MATCH(AG5,usqPerils,0)),\"USQ\",IF(ISNUMBER(MATCH(AG5,euwPerils,0)),\"EUW\",IF(ISNUMBER(MATCH(AG5,jpwPerils,0)),\"JPW\",IF(ISNUMBER(MATCH(AG5,jpqPerils,0)),\"JPQ\",IF(ISNUMBER(MATCH(AG5,otherqPerils,0)),\"OtherQ\",IF(ISNUMBER(MATCH(AG5,otherwPerils,0)),\"OtherW\",IF(ISNUMBER(MATCH(AG5,otherOtherPerils,0)),\"OtherOther\",IF(AG5=\"EOF\",\"EOF\",\"FAIL!\")))))))))";
-            var formula = new Formula(_ws.Cells["D4:E12"], f);
+            var formula = new SharedFormula(_ws.Cells["D4:E12"], f);
             f= "\"{'entity':'\" & entity & \"', 'effective_date':'\" & effective_date & \"', 'fcm_codes':[],'characteristics':[\" &$O$58 & \"],'target_cell':'E3'}\"";
-            formula = new Formula(_ws.Cells["D4:E12"], f); 
+            formula = new SharedFormula(_ws.Cells["D4:E12"], f); 
             Assert.AreEqual(1, formula.Tokens.Count);
         }
     }

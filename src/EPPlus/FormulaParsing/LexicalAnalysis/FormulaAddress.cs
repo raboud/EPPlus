@@ -4,12 +4,12 @@ using System.Collections.Generic;
 
 namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 {
-    internal class Formula
+    internal class SharedFormula
     {
         ExcelWorksheet _ws;
         ExcelRangeBase _range;
         internal static ISourceCodeTokenizer _tokenizer= OptimizedSourceCodeTokenizer.Default;
-        public Formula(ExcelRangeBase range, string formula)
+        public SharedFormula(ExcelRangeBase range, string formula)
         {            
             _range = range;
             _ws = range.Worksheet;

@@ -101,9 +101,9 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             var input = "1 <= 2";
             var tokens = _tokenizer.Tokenize(input);
 
-            Assert.AreEqual(5, tokens.Count);
-            Assert.AreEqual("<=", tokens.ElementAt(2).Value);
-            Assert.IsTrue(tokens[2].TokenTypeIsSet(TokenType.Operator));
+            Assert.AreEqual(3, tokens.Count);
+            Assert.AreEqual("<=", tokens.ElementAt(1).Value);
+            Assert.IsTrue(tokens[1].TokenTypeIsSet(TokenType.Operator));
         }
 
         [TestMethod]
@@ -492,15 +492,16 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             }
         }
         [TestMethod]
-        public void TokenizeWhiteSpace()
+        public void TokenizeKeepWhiteSpace()
         {
             var input = @"A1:B3  B2:C5";
-            var tokens = _tokenizer.Tokenize(input);
+            var tokenizer = new OptimizedSourceCodeTokenizer(null, null, false, true);
+            var tokens = tokenizer.Tokenize(input);
             Assert.AreEqual(TokenType.WhiteSpace, tokens[3].TokenType);
             Assert.AreEqual(7, tokens.Count);
             
             input = "=( A1:B3 )   (B2:C3)";
-            tokens = _tokenizer.Tokenize(input);
+            tokens = tokenizer.Tokenize(input);
             Assert.AreEqual(14, tokens.Count);
             Assert.AreEqual(TokenType.WhiteSpace, tokens[2].TokenType);
             Assert.AreEqual(TokenType.WhiteSpace, tokens[6].TokenType);
@@ -508,7 +509,7 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             Assert.AreEqual("   ", tokens[8].Value);
 
             input = "=( A1:B3 )( B2:C3  )  ";
-            tokens = _tokenizer.Tokenize( input);
+            tokens = tokenizer.Tokenize( input);
             Assert.AreEqual(16, tokens.Count);
             Assert.AreEqual(TokenType.WhiteSpace, tokens[2].TokenType);
             Assert.AreEqual(TokenType.WhiteSpace, tokens[6].TokenType);
@@ -518,5 +519,27 @@ namespace EPPlusTest.FormulaParsing.LexicalAnalysis
             Assert.AreEqual(TokenType.WhiteSpace, tokens[15].TokenType);
             Assert.AreEqual("  ", tokens[15].Value);
         }
+        [TestMethod]
+        public void TokenizeWhiteSpace()
+        {
+            var input = @"A1:B3  B2:C5";
+            var tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(TokenType.ExcelAddress, tokens[2].TokenType);
+            Assert.AreEqual(TokenType.ExcelAddress, tokens[3].TokenType);
+            Assert.AreEqual(6, tokens.Count);
+
+            input = "=( A1:B3 )   (B2:C3)";
+            tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(11, tokens.Count);
+            Assert.AreEqual(TokenType.ClosingParenthesis, tokens[5].TokenType);
+            Assert.AreEqual(TokenType.OpeningParenthesis, tokens[6].TokenType);
+
+            input = "=( A1:B3 )( B2:C3  )  ";
+            tokens = _tokenizer.Tokenize(input);
+            Assert.AreEqual(11, tokens.Count);
+            Assert.AreEqual(TokenType.ClosingParenthesis, tokens[5].TokenType);
+            Assert.AreEqual(TokenType.OpeningParenthesis, tokens[6].TokenType);
+        }
+
     }
 }

@@ -52,19 +52,26 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             {"#data" },
             {"#totals" }
         };
-        private bool _r1c1;
+        private bool _r1c1, _keepWhitespace;
+        /// <summary>
+        /// The default tokenizer. This tokenizer will remove and ignore whitespaces.
+        /// </summary>
         public static ISourceCodeTokenizer Default
         {
-            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
+            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false, false); }
         }
+        /// <summary>
+        /// The tokenizer used for r1c1 format. This tokenizer will keep whitespaces and add them as tokens.
+        /// </summary>
         public static ISourceCodeTokenizer R1C1
         {
-            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
+            get { return new OptimizedSourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true, true); }
         }
 
-        public OptimizedSourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)            
+        public OptimizedSourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false, bool keepWhitespace=false)
         {
             _r1c1 = r1c1;
+            _keepWhitespace = keepWhitespace;
         }
         public OptimizedSourceCodeTokenizer(ITokenFactory tokenFactory)
         {
@@ -168,13 +175,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                             current.Clear();
 #endif
                         }
-                        else if (c==' ' && bracketCount>0)
+                        else if (c==' ' && bracketCount > 0)
                         {
                             current.Append(c);
                         }
                         else
                         {
-
                             HandleToken(l, c, current, ref flags);
 
                             if (c == '-')
@@ -224,7 +230,10 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                                     {
                                         wsCnt++;
                                     }
-                                    l.Add(new Token(new string(c, wsCnt), TokenType.WhiteSpace));
+                                    if (_keepWhitespace)
+                                    {
+                                        l.Add(new Token(new string(c, wsCnt), TokenType.WhiteSpace));
+                                    }
                                     ix = wsIx >= input.Length && input[input.Length - 1] == ' ' ? wsIx - 1 : wsIx - 2;
                                 }
                                 else
@@ -326,31 +335,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             while (i >= 0 && l[i].TokenType == TokenType.WhiteSpace) 
                 i--;
             return l[i];
-        }
-
-        private static void HandleIntersectOperator(List<Token> l)
-        {
-            var pt = l[l.Count - 3];
-            var t = l[l.Count - 1];
-            if ((pt.TokenType == TokenType.ExcelAddress ||
-               pt.TokenType == TokenType.ExcelAddressR1C1 ||
-               pt.TokenType == TokenType.NameValue ||
-               pt.TokenType == TokenType.ClosingParenthesis ||
-               pt.TokenType == TokenType.ClosingBracket)
-               &&
-               (t.TokenType == TokenType.ExcelAddress ||
-               t.TokenType == TokenType.ExcelAddressR1C1 ||
-               t.TokenType == TokenType.NameValue ||
-               t.TokenType == TokenType.OpeningParenthesis ||
-               t.TokenType == TokenType.OpeningBracket))
-            {
-                var wsp = l[l.Count - 2].Value;
-                l[l.Count - 2] = new Token(" ", TokenType.Operator);
-                if (wsp.Length > 1)
-                {
-                    l.Insert(l.Count - 1, new Token(wsp.Substring(1), TokenType.WhiteSpace));
-                }
-            }
         }
 
         private void SetRangeOffsetToken(List<Token> l)
