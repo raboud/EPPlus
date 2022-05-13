@@ -106,7 +106,24 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
                 return sourceRange;
             }
-
+        }
+        internal object[,] Records{ get; set; }
+        internal void CreateRecords()
+        {
+            var sr = SourceRange;
+            int lastRow = sr._toRow+1, lastCol = 1;
+            var cellStore = sr.Worksheet._values;
+            var fromColPos = cellStore.GetColumnPosition(sr._fromCol);
+            var toColPos = cellStore.GetColumnPosition(sr._toCol);
+            cellStore.PrevCell(ref lastRow, ref lastCol, sr._fromRow, fromColPos, sr._toRow, toColPos);
+            var Records = new object[lastRow - sr._fromRow, sr._toCol - sr._fromCol+1];
+            for(int row=lastRow;row > sr._fromRow;row--) //Ignore first row as it contains the 
+            {
+                for(int col=sr._toCol;col >= sr._fromCol;col--)
+                {
+                    Records[row - sr._fromRow - 1, col - sr._fromCol] = cellStore.GetValue(row, col);
+                }
+            }
         }
         private ExcelRangeBase GetRangeByName(ExcelWorksheet w, string name)
         {
@@ -377,6 +394,7 @@ namespace OfficeOpenXml.Table.PivotTable
                     fld.Items.Refresh();
                 }
             }
+            CreateRecords();
         }
 
         internal eSourceType CacheSource
