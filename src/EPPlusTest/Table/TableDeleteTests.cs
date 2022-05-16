@@ -99,7 +99,7 @@ namespace EPPlusTest.Table
             tbl.Columns[1].TotalsRowFunction = RowFunctions.Count;
             tbl.Columns[2].TotalsRowFunction = RowFunctions.Average;
             tbl.Columns[3].TotalsRowFunction = RowFunctions.CountNums;
-            tbl.DeleteRow(99,1);
+            tbl.DeleteRow(99, 1);
             Assert.AreEqual("B1:E100", tbl.Address.Address);
             Assert.AreEqual("Shift Me Up", ws.Cells["B101"].Value);
             tbl.DeleteRow(96, 3);
@@ -155,7 +155,7 @@ namespace EPPlusTest.Table
             {
                 var ws = p.Workbook.Worksheets.Add("Table1");
                 var tbl = ws.Tables.Add(ws.Cells["A1:D100"], "Table1");
-                tbl.DeleteRow(99,1);
+                tbl.DeleteRow(99, 1);
             }
         }
         [TestMethod]
@@ -189,7 +189,7 @@ namespace EPPlusTest.Table
             {
                 var ws = p.Workbook.Worksheets.Add("Table1");
                 var tbl = ws.Tables.Add(ws.Cells["A1:D100"], "Table1");
-                tbl.DeleteRow(0, 99); 
+                tbl.DeleteRow(0, 99);
             }
         }
         #endregion
@@ -217,7 +217,7 @@ namespace EPPlusTest.Table
         {
             //Setup
             var ws = _pck.Workbook.Worksheets.Add("TableAddCol");
-            LoadTestdata(ws, 100,2);
+            LoadTestdata(ws, 100, 2);
             ws.Cells["F99"].Value = "Shift Me Right";
             var tbl = ws.Tables.Add(ws.Cells["B1:E100"], "TableAddColumn");
             tbl.Columns.Delete(0, 4);
@@ -244,7 +244,7 @@ namespace EPPlusTest.Table
             Assert.AreEqual(RowFunctions.Count, tbl.Columns[0].TotalsRowFunction);
             Assert.AreEqual(RowFunctions.CountNums, tbl.Columns[2].TotalsRowFunction);
             Assert.AreEqual("Shift Me Left", ws.Cells["E100"].Value);
-            tbl.Columns.Delete(1,2);
+            tbl.Columns.Delete(1, 2);
             Assert.AreEqual("B1:B101", tbl.Address.Address);
             Assert.AreEqual(RowFunctions.Count, tbl.Columns[0].TotalsRowFunction);
             Assert.AreEqual("Don't Shift Me", ws.Cells["A50"].Value);
@@ -308,6 +308,40 @@ namespace EPPlusTest.Table
             }
             sheet.Cells["A3"].Value = 1;
             sheet.Cells["A4"].Value = 2;
+            var table = showHeader ? sheet.Tables.Add(sheet.Cells["A2:E4"], tableName) : sheet.Tables.Add(sheet.Cells["A3:E4"], tableName);
+            table.ShowHeader = showHeader;
+            return package;
+        }
+
+        [TestMethod]
+        public void RemoveRowFromTableWithHiddenHeader_Should_Succeed()
+        {
+            using (var xlsx = CreateTablePackage(false, "Sheet1", "myTable"))
+            {
+                var ws = xlsx.Workbook.Worksheets["Sheet1"];
+                var table = ws.Tables["myTable"];
+                Assert.AreEqual(2, table.Range.Rows);
+                Assert.AreEqual(2, ws.Cells["A4"].Value);
+                table.DeleteRow(1, 1);
+                Assert.IsNull(ws.Cells["A4"].Value);
+                Assert.AreEqual(1, table.Range.Rows);
+            }
+        }
+
+        [TestMethod]
+        public void RemoveRowFromTableWithVisibleHeader_Should_Succeed()
+        {
+            using (var xlsx = CreateTablePackage(true, "Sheet1", "myTable"))
+            {
+                var ws = xlsx.Workbook.Worksheets["Sheet1"];
+                var table = ws.Tables["myTable"];
+                Assert.AreEqual(3, table.Range.Rows);
+                Assert.AreEqual(2, ws.Cells["A4"].Value);
+                table.DeleteRow(1, 1);
+                Assert.IsNull(ws.Cells["A4"].Value);
+                Assert.AreEqual(2, table.Range.Rows);
+            }
+        }
         #endregion
     }
 }

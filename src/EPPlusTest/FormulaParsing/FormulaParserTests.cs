@@ -62,7 +62,7 @@ namespace EPPlusTest.FormulaParsing
         public void ParserShouldCallLexer()
         {
             var lexer = A.Fake<ILexer>();
-            A.CallTo(() => lexer.Tokenize("ABC")).Returns(Enumerable.Empty<Token>());
+            A.CallTo(() => (IEnumerable<Token>)lexer.Tokenize("ABC")).Returns(Enumerable.Empty<Token>());
             _parser.Configure(x => x.SetLexer(lexer));
 
             _parser.Parse("ABC");

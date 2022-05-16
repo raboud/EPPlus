@@ -639,5 +639,12 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             }
             return CreateResult(result, DataType.Enumerable);
         }
+        public virtual bool IsVolatile
+        {
+            get
+            {
+                return false;
+            }
+        }
     }
 }

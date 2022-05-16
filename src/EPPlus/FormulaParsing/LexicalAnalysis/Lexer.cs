@@ -33,11 +33,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         }
 
         private readonly ISourceCodeTokenizer _tokenizer;
-        public IEnumerable<Token> Tokenize(string input)
+        public IList<Token> Tokenize(string input)
         {
             return Tokenize(input, null);
         }
-        public IEnumerable<Token> Tokenize(string input, string worksheet)
+        public IList<Token> Tokenize(string input, string worksheet)
         {
             var tokens = _tokenizer.Tokenize(input, worksheet);
             return tokens;
