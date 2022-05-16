@@ -2850,14 +2850,25 @@ namespace OfficeOpenXml
                         string n=col.Name.ToLowerInvariant();
                         if (tbl.ShowHeader)
                         {
-                            n = tbl.WorkSheet.GetValue<string>(tbl.Address._fromRow,
-                                tbl.Address._fromCol + col.Position);
+                            var v = tbl.WorkSheet.GetValue(tbl.Address._fromRow, colNum);
+
+                            if (v is string s)
+                            {
+                                n = s;
+                            }
+                            else
+                            {
+                                //Column headers must be a string. Set the value to the string value of the number.
+                                n = tbl.WorkSheet.Cells[tbl.Address._fromRow, tbl.Address._fromCol + col.Position].Text;
+                                SetValueInner(tbl.Address._fromRow, colNum, n); 
+                            }
+
                             if (string.IsNullOrEmpty(n))
                             {
                                 n = col.Name.ToLowerInvariant();
                                 SetValueInner(tbl.Address._fromRow, colNum, ConvertUtil.ExcelDecodeString(col.Name));
                             }
-                            else if(col.Name != n)
+                            else if (col.Name != n)
                             {
                                 col.Name = n;
                                 SetValueInner(tbl.Address._fromRow, colNum, ConvertUtil.ExcelDecodeString(col.Name));
@@ -3530,23 +3541,22 @@ namespace OfficeOpenXml
                         sw.Write($"<{prefix}hyperlinks>");
                         first = false;
                     }
-
-                    if (uri is ExcelHyperLink && !string.IsNullOrEmpty((uri as ExcelHyperLink).ReferenceAddress))
+                    var hl = uri as ExcelHyperLink;
+                    if (hl != null && !string.IsNullOrEmpty(hl.ReferenceAddress))
                     {
-                        ExcelHyperLink hl = uri as ExcelHyperLink;
-                    var address = Cells[cse.Row, cse.Column, cse.Row + hl.RowSpann, cse.Column + hl.ColSpann].Address;
-                    var location = ExcelCellBase.GetFullAddress(SecurityElement.Escape(Name), SecurityElement.Escape(hl.ReferenceAddress));
-                    var display = string.IsNullOrEmpty(hl.Display) ? "" : " display=\"" + SecurityElement.Escape(hl.Display) + "\"";
-                    var tooltip = string.IsNullOrEmpty(hl.ToolTip) ? "" : " tooltip=\"" + SecurityElement.Escape(hl.ToolTip) + "\"";
-                        sw.Write($"<{prefix}hyperlink ref=\"{address}\" location=\"{location}\"{display}{tooltip}/>");
+                        var address = Cells[cse.Row, cse.Column, cse.Row + hl.RowSpann, cse.Column + hl.ColSpann].Address;
+                        var location = ExcelCellBase.GetFullAddress(SecurityElement.Escape(Name), SecurityElement.Escape(hl.ReferenceAddress));
+                        var display = string.IsNullOrEmpty(hl.Display) ? "" : " display=\"" + SecurityElement.Escape(hl.Display) + "\"";
+                        var tooltip = string.IsNullOrEmpty(hl.ToolTip) ? "" : " tooltip=\"" + SecurityElement.Escape(hl.ToolTip) + "\"";
+                            sw.Write($"<{prefix}hyperlink ref=\"{address}\" location=\"{location}\"{display}{tooltip}/>");
                     }
-                    else if( uri!=null)
+                    else if(uri!=null)
                     {
                         string id;
                         Uri hyp;
-                        if (uri is ExcelHyperLink)
+                        if (hl != null)
                         {
-                            hyp = ((ExcelHyperLink)uri).OriginalUri;
+                            hyp = hl.OriginalUri;
                         }
                         else
                         {
@@ -3559,9 +3569,8 @@ namespace OfficeOpenXml
                         else
                         {
                             var relationship = Part.CreateRelationship(hyp, Packaging.TargetMode.External, ExcelPackage.schemaHyperlink);
-                            if (uri is ExcelHyperLink)
-                            {
-                                ExcelHyperLink hl = uri as ExcelHyperLink;
+                            if (hl != null)
+                            {                                
                                 var display = string.IsNullOrEmpty(hl.Display) ? "" : " display=\"" + SecurityElement.Escape(hl.Display) + "\"";
                                 var toolTip = string.IsNullOrEmpty(hl.ToolTip) ? "" : " tooltip=\"" + SecurityElement.Escape(hl.ToolTip) + "\"";
                                 sw.Write($"<{prefix}hyperlink ref=\"{ExcelCellBase.GetAddress(cse.Row, cse.Column)}\"{display}{toolTip} r:id=\"{relationship.Id}\"/>");

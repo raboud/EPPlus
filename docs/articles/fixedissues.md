@@ -1,4 +1,14 @@
 ﻿# Features / Fixed issues - EPPlus 6
+## Version 6.0.4
+### Fixed issues
+* Improved handling of circular references for SUMIF and COUNTIF
+* Memory optimization reading directly from the zip stream, when reading the worksheet xml, allowing unexteracted parts larger than 2GB.
+* Hyperlinks in cells added with 'Display=null' will now use the formatted cell value as text for in workbook links.
+* Remove invalid attribute TopLeftCell on the Selection element for splited/freezed worksheets.
+* Fixed an issue in the unziping of packages using ZIP64 file headers and data descriptors
+* Fix for removing rows from ExcelTable with options ShowHeader set to false.
+* Improved handling of workbook- and worksheet-names when loaded from file with a relative address
+* Box and Whisker chart series failed when copied to a new worksheet.
 
 ## Version 6.0.3
 ### Changes
@@ -56,6 +66,15 @@
 * DeleteColumn caused the worksheet to expands to the maximum column properties extended to the last column (XFD).
 * The UPPER and LOWER functions did not handle empty cell values correctly.
 * Fixed an issue in ExpressionEvaluator when evaluating empty string criterias.
+
+## Version 5.8.10
+### Fixed issues
+* Hyperlinks in cells added with 'Display=null' will now use the formatted cell value as text for in workbook links.
+* Remove invalid attribute TopLeftCell on the Selection element for splited/freezed worksheets.
+* Fixed an issue in the unziping of packages using ZIP64 file headers and data descriptors
+* Fix for removing rows from ExcelTable with options ShowHeader set to false.
+* Improved handling of workbook- and worksheet-names when loaded from file with a relative address
+* Box and Whisker chart series failed when copied to a new worksheet.
 
 ## Version 5.8.9
 ### Fixed issues
